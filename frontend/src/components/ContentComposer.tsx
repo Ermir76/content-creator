@@ -93,8 +93,7 @@ export function ContentComposer({ onGenerate, isLoading }: ContentComposerProps)
                 return (
                   <div
                     key={platform.id}
-                    className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-accent transition-colors cursor-pointer"
-                    onClick={() => !isLoading && handlePlatformToggle(platform.id)}
+                    className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-accent transition-colors"
                   >
                     <Checkbox
                       id={platform.id}

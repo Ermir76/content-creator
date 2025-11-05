@@ -58,7 +58,7 @@ def generate_content_for_platforms(
     Returns:
         Dictionary mapping platform names to generated content text
     """
-    model = genai.GenerativeModel('gemini-pro')  # type: ignore
+    model = genai.GenerativeModel('gemini-2.0-flash')  # type: ignore
     generated_content = {}
     
     for platform in platforms:
