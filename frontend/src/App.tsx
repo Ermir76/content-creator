@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import { Layout } from './components/Layout';
 import { ContentComposer } from './components/ContentComposer';
-import { ArrowUp } from 'lucide-react';
+import { GeneratedContentCard } from './components/GeneratedContentCard';
+import { Card, CardContent } from './components/ui/card';
+import { Button } from './components/ui/button';
+import { ArrowUp, AlertCircle, RefreshCw } from 'lucide-react';
 import axios from 'axios';
 
 interface GeneratedContent {
@@ -17,10 +20,12 @@ function App() {
   const [generatedContent, setGeneratedContent] = useState<GeneratedContent[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lastRequest, setLastRequest] = useState<{ ideaPrompt: string; platforms: string[] } | null>(null);
 
   const handleGenerate = async (ideaPrompt: string, platforms: string[]) => {
     setIsLoading(true);
     setError(null);
+    setLastRequest({ ideaPrompt, platforms });
 
     try {
       const response = await axios.post('/content/generate', {
@@ -31,9 +36,25 @@ function App() {
       setGeneratedContent(response.data);
     } catch (err) {
       console.error('Error generating content:', err);
-      setError('Failed to generate content. Please try again.');
+      if (axios.isAxiosError(err)) {
+        if (err.response?.status === 500) {
+          setError('Server error. Please check if the backend is running and your API key is configured.');
+        } else if (err.code === 'ERR_NETWORK') {
+          setError('Cannot connect to the server. Make sure the backend is running at http://localhost:8000');
+        } else {
+          setError(err.response?.data?.detail || 'Failed to generate content. Please try again.');
+        }
+      } else {
+        setError('An unexpected error occurred. Please try again.');
+      }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleRetry = () => {
+    if (lastRequest) {
+      handleGenerate(lastRequest.ideaPrompt, lastRequest.platforms);
     }
   };
 
@@ -45,27 +66,44 @@ function App() {
 
         {/* Error Display */}
         {error && (
-          <div className="max-w-3xl mx-auto p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
-            <p className="font-semibold">Error</p>
-            <p>{error}</p>
+          <div className="max-w-3xl mx-auto">
+            <Card className="border-red-200 bg-red-50">
+              <CardContent className="pt-6">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <p className="font-semibold text-red-900">Error</p>
+                    <p className="text-red-700 text-sm mt-1">{error}</p>
+                    {lastRequest && (
+                      <Button
+                        onClick={handleRetry}
+                        variant="outline"
+                        size="sm"
+                        className="mt-3 border-red-300 text-red-700 hover:bg-red-100"
+                      >
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        Retry
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         )}
 
-        {/* Generated Content Display (placeholder for now) */}
+        {/* Generated Content Display */}
         {generatedContent.length > 0 && (
-          <div className="max-w-3xl mx-auto">
-            <h2 className="text-2xl font-bold text-white mb-4">Generated Content</h2>
-            <div className="space-y-4">
+          <div className="max-w-3xl mx-auto space-y-6">
+            <h2 className="text-2xl font-bold text-white">Generated Content</h2>
+            <div className="grid gap-6">
               {generatedContent.map((content) => (
-                <div key={content.id} className="bg-white p-6 rounded-lg shadow-lg">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="font-semibold text-lg capitalize">{content.platform}</span>
-                    <span className="text-sm text-gray-500">
-                      {new Date(content.created_at).toLocaleString()}
-                    </span>
-                  </div>
-                  <p className="text-gray-700 whitespace-pre-wrap">{content.content_text}</p>
-                </div>
+                <GeneratedContentCard
+                  key={content.id}
+                  platform={content.platform}
+                  content={content.content_text}
+                  createdAt={content.created_at}
+                />
               ))}
             </div>
           </div>
