@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Copy, Check } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface GeneratedContentCardProps {
   platform: string;
@@ -31,9 +32,15 @@ export function GeneratedContentCard({ platform, content, createdAt }: Generated
     try {
       await navigator.clipboard.writeText(content);
       setCopied(true);
+      toast.success('Copied to clipboard!', {
+        description: `${platformLabel} content is ready to paste`
+      });
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error('Failed to copy text:', err);
+      toast.error('Failed to copy', {
+        description: 'Please try again'
+      });
     }
   };
 
@@ -41,10 +48,10 @@ export function GeneratedContentCard({ platform, content, createdAt }: Generated
   const platformLabel = PLATFORM_LABELS[platform.toLowerCase()] || platform;
 
   return (
-    <Card className="hover:shadow-xl transition-shadow">
+    <Card className="hover:shadow-xl transition-all duration-300 animate-in fade-in slide-in-from-bottom-4">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <Badge className={`${platformColor} text-white`}>
+          <Badge className={`${platformColor} text-white transition-transform hover:scale-105`}>
             {platformLabel}
           </Badge>
           <span className="text-sm text-muted-foreground">
@@ -64,7 +71,7 @@ export function GeneratedContentCard({ platform, content, createdAt }: Generated
         <Button
           onClick={handleCopy}
           variant="outline"
-          className="w-full"
+          className="w-full transition-all"
           disabled={copied}
         >
           {copied ? (

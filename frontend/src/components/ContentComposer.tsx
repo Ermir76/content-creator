@@ -5,6 +5,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Briefcase, MessageSquare, Camera, Sparkles } from 'lucide-react';
+import { toast } from 'sonner';
 import type { LucideIcon } from 'lucide-react';
 
 interface Platform {
@@ -28,7 +29,7 @@ interface ContentComposerProps {
 export function ContentComposer({ onGenerate, isLoading }: ContentComposerProps) {
   const [ideaPrompt, setIdeaPrompt] = useState('');
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
-  const [error, setError] = useState('');
+  const [showValidation, setShowValidation] = useState(false);
 
   const handlePlatformToggle = (platformId: string) => {
     setSelectedPlatforms(prev =>
@@ -36,7 +37,7 @@ export function ContentComposer({ onGenerate, isLoading }: ContentComposerProps)
         ? prev.filter(id => id !== platformId)
         : [...prev, platformId]
     );
-    setError(''); // Clear error when user makes changes
+    setShowValidation(false);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -44,16 +45,22 @@ export function ContentComposer({ onGenerate, isLoading }: ContentComposerProps)
     
     // Validation
     if (!ideaPrompt.trim()) {
-      setError('Please enter an idea for your post');
+      setShowValidation(true);
+      toast.error('Missing idea', {
+        description: 'Please enter an idea for your post'
+      });
       return;
     }
     
     if (selectedPlatforms.length === 0) {
-      setError('Please select at least one platform');
+      setShowValidation(true);
+      toast.error('No platform selected', {
+        description: 'Please select at least one platform'
+      });
       return;
     }
 
-    setError('');
+    setShowValidation(false);
     onGenerate(ideaPrompt, selectedPlatforms);
   };
 
@@ -76,10 +83,20 @@ export function ContentComposer({ onGenerate, isLoading }: ContentComposerProps)
               id="idea-prompt"
               placeholder="E.g., Share tips about staying productive while working from home..."
               value={ideaPrompt}
-              onChange={(e) => setIdeaPrompt(e.target.value)}
-              className="min-h-[120px] resize-none"
+              onChange={(e) => {
+                setIdeaPrompt(e.target.value);
+                setShowValidation(false);
+              }}
+              className={`min-h-[120px] resize-none transition-colors ${
+                showValidation && !ideaPrompt.trim() 
+                  ? 'border-destructive focus-visible:ring-destructive' 
+                  : ''
+              }`}
               disabled={isLoading}
             />
+            {showValidation && !ideaPrompt.trim() && (
+              <p className="text-sm text-destructive">This field is required</p>
+            )}
           </div>
 
           {/* Platform Selection */}
@@ -87,7 +104,11 @@ export function ContentComposer({ onGenerate, isLoading }: ContentComposerProps)
             <Label className="text-base font-semibold">
               Select Platforms
             </Label>
-            <div className="grid grid-cols-2 gap-4">
+            <div className={`grid grid-cols-2 gap-4 transition-all ${
+              showValidation && selectedPlatforms.length === 0 
+                ? 'ring-2 ring-destructive/50 rounded-lg p-2' 
+                : ''
+            }`}>
               {PLATFORMS.map((platform) => {
                 const Icon = platform.icon;
                 return (
@@ -112,14 +133,10 @@ export function ContentComposer({ onGenerate, isLoading }: ContentComposerProps)
                 );
               })}
             </div>
+            {showValidation && selectedPlatforms.length === 0 && (
+              <p className="text-sm text-destructive">Please select at least one platform</p>
+            )}
           </div>
-
-          {/* Error Message */}
-          {error && (
-            <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20">
-              <p className="text-sm text-destructive font-medium">{error}</p>
-            </div>
-          )}
 
           {/* Generate Button */}
           <Button

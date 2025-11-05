@@ -12,11 +12,15 @@ An AI-powered application that generates platform-specific social media content 
 
 - **AI-Powered Content Generation** - Uses Google Gemini 2.0 Flash for intelligent content creation
 - **Platform-Specific Optimization** - Tailored content for LinkedIn, Twitter, Reddit, and Instagram
-- **Copy to Clipboard** - One-click copy functionality with visual feedback
+- **Toast Notifications** - Beautiful, non-intrusive notifications with Sonner
+- **Smart Form Validation** - Real-time validation with helpful error messages
+- **Copy to Clipboard** - One-click copy functionality with toast feedback
 - **Professional Dark Theme** - Sleek, modern UI with Shadcn/UI components
-- **Real-time Generation** - Fast content creation with loading states
+- **Enhanced Loading States** - Smooth animations and loading indicators
+- **Engaging Empty States** - Helpful guidance when starting out
 - **Error Handling** - Comprehensive error messages with retry functionality
 - **Content History** - All generated content is saved to database
+- **Smooth Animations** - Fade-in effects and transitions throughout
 
 ## Videolink
 
@@ -37,6 +41,7 @@ An AI-powered application that generates platform-specific social media content 
 - **Vite** - Next-generation frontend tooling
 - **Tailwind CSS** - Utility-first CSS framework
 - **Shadcn/UI** - Re-usable component library
+- **Sonner** - Toast notification library
 - **Axios** - Promise-based HTTP client
 - **Lucide React** - Beautiful icon library
 
