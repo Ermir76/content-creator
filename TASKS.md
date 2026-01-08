@@ -230,18 +230,18 @@
 ## Phase 10: Quality Tracking
 
 ### 10.1 Update Database Models
-- [ ] Edit `app/models/models.py`
-- [ ] Add to GeneratedContent model:
-  - [ ] `model_used = Column(String)`
-  - [ ] `validation_passed = Column(Boolean, default=True)`
-  - [ ] `regeneration_count = Column(Integer, default=0)`
-  - [ ] `char_count = Column(Integer)`
+- [x] Edit `app/models/models.py`
+- [x] Add to GeneratedContent model:
+  - [x] `model_used = Column(String)`
+  - [x] `validation_passed = Column(Boolean, default=True)`
+  - [x] `regeneration_count = Column(Integer, default=0)`
+  - [x] `char_count = Column(Integer)`
 
 ### 10.2 Create Migration
-- [ ] Run `alembic revision --autogenerate -m "Add quality tracking columns"`
-- [ ] Review migration file
-- [ ] Run `alembic upgrade head`
-- [ ] Verify new columns in database
+- [x] Run `alembic revision --autogenerate -m "Add quality tracking columns"`
+- [x] Review migration file
+- [x] Run `alembic upgrade head`
+- [x] Verify new columns in database
 
 ### 10.3 Create Quality Logger
 - [ ] Create `app/services/quality_logger.py`
