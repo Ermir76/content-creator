@@ -244,10 +244,10 @@
 - [x] Verify new columns in database
 
 ### 10.3 Create Quality Logger
-- [ ] Create `app/services/quality_logger.py`
-- [ ] Create `QualityLogger` class
-- [ ] Implement `log(platform, model_used, validation)` method
-- [ ] Store metrics in database
+- [x] Create `app/services/quality_logger.py`
+- [x] Create `QualityLogger` class
+- [x] Implement `log(platform, model_used, validation)` method
+- [x] Store metrics in database
 
 ---
 

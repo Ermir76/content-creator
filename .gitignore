@@ -220,10 +220,10 @@ documents/
 # AI/ML models (if any)
 *.pkl
 *.pickle
-*.model
+
 *.h5
 *.weights
-models/
+
 
 # Data files (uncomment if you don't want to track data)
 # *.csv
