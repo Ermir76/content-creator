@@ -376,25 +376,25 @@
 ## Phase 15: Platform Support
 
 ### 15.1 Add Facebook to Backend
-- [ ] Already defined in platform_policies.py (verify)
-- [ ] Test Facebook content generation
+- [x] Already defined in platform_policies.py (verify)
+- [x] Test Facebook content generation
 
 ### 15.2 Add TikTok to Backend
-- [ ] Already defined in platform_policies.py (verify)
-- [ ] Test TikTok content generation
+- [x] Already defined in platform_policies.py (verify)
+- [x] Test TikTok content generation
 
 ### 15.3 Add Facebook to Frontend
-- [ ] Edit `frontend/src/components/ContentComposer.tsx`
-- [ ] Add to PLATFORMS array:
-  - [ ] id: 'facebook'
-  - [ ] name: 'Facebook'
-  - [ ] icon: appropriate icon from lucide-react
+- [x] Edit `frontend/src/components/ContentComposer.tsx`
+- [x] Add to PLATFORMS array:
+  - [x] id: 'facebook'
+  - [x] name: 'Facebook'
+  - [x] icon: appropriate icon from lucide-react
 
 ### 15.4 Add TikTok to Frontend
-- [ ] Add to PLATFORMS array:
-  - [ ] id: 'tiktok'
-  - [ ] name: 'TikTok'
-  - [ ] icon: appropriate icon from lucide-react
+- [x] Add to PLATFORMS array:
+  - [x] id: 'tiktok'
+  - [x] name: 'TikTok'
+  - [x] icon: appropriate icon from lucide-react
 
 ---
 

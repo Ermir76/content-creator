@@ -4,7 +4,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Briefcase, MessageSquare, Camera, Sparkles } from 'lucide-react';
+import { Loader2, Briefcase, MessageSquare, Camera, Sparkles, ThumbsUp, Music } from 'lucide-react';
 import { toast } from 'sonner';
 import type { LucideIcon } from 'lucide-react';
 
@@ -19,6 +19,8 @@ const PLATFORMS: Platform[] = [
   { id: 'twitter', name: 'Twitter', icon: MessageSquare },
   { id: 'reddit', name: 'Reddit', icon: MessageSquare },
   { id: 'instagram', name: 'Instagram', icon: Camera },
+  { id: 'facebook', name: 'Facebook', icon: ThumbsUp },
+  { id: 'tiktok', name: 'TikTok', icon: Music },
 ];
 
 interface ContentComposerProps {
@@ -42,7 +44,7 @@ export function ContentComposer({ onGenerate, isLoading }: ContentComposerProps)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validation
     if (!ideaPrompt.trim()) {
       setShowValidation(true);
@@ -51,7 +53,7 @@ export function ContentComposer({ onGenerate, isLoading }: ContentComposerProps)
       });
       return;
     }
-    
+
     if (selectedPlatforms.length === 0) {
       setShowValidation(true);
       toast.error('No platform selected', {
@@ -87,11 +89,10 @@ export function ContentComposer({ onGenerate, isLoading }: ContentComposerProps)
                 setIdeaPrompt(e.target.value);
                 setShowValidation(false);
               }}
-              className={`min-h-[120px] resize-none transition-colors ${
-                showValidation && !ideaPrompt.trim() 
-                  ? 'border-destructive focus-visible:ring-destructive' 
-                  : ''
-              }`}
+              className={`min-h-[120px] resize-none transition-colors ${showValidation && !ideaPrompt.trim()
+                ? 'border-destructive focus-visible:ring-destructive'
+                : ''
+                }`}
               disabled={isLoading}
             />
             {showValidation && !ideaPrompt.trim() && (
@@ -104,11 +105,10 @@ export function ContentComposer({ onGenerate, isLoading }: ContentComposerProps)
             <Label className="text-base font-semibold">
               Select Platforms
             </Label>
-            <div className={`grid grid-cols-2 gap-4 transition-all ${
-              showValidation && selectedPlatforms.length === 0 
-                ? 'ring-2 ring-destructive/50 rounded-lg p-2' 
-                : ''
-            }`}>
+            <div className={`grid grid-cols-2 sm:grid-cols-3 gap-4 transition-all ${showValidation && selectedPlatforms.length === 0
+              ? 'ring-2 ring-destructive/50 rounded-lg p-2'
+              : ''
+              }`}>
               {PLATFORMS.map((platform) => {
                 const Icon = platform.icon;
                 return (
