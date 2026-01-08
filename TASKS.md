@@ -299,22 +299,22 @@
 ## Phase 12: Update API Endpoint
 
 ### 12.1 Update main.py Imports
-- [ ] Remove import of `gemini_service`
-- [ ] Import `content_generator`
-- [ ] Import response models from `app.models.response_models`
+- [x] Remove import of `gemini_service`
+- [x] Import `content_generator`
+- [x] Import response models from `app.models.response_models`
 
 ### 12.2 Update Generate Endpoint
-- [ ] Change response model to `GenerationResponse`
-- [ ] Update endpoint to call new `generate_content` function
-- [ ] Remove old content saving logic (moved to orchestrator)
-- [ ] Handle new response structure
+- [x] Change response model to `GenerationResponse`
+- [x] Update endpoint to call new `generate_content` function
+- [x] Remove old content saving logic (moved to orchestrator)
+- [x] Handle new response structure
 
 ### 12.3 Update Get All Content Endpoint
-- [ ] Modify to include new fields (model_used, etc.)
-- [ ] Test endpoint returns correct data
+- [x] Modify to include new fields (model_used, etc.)
+- [x] Test endpoint returns correct data
 
 ### 12.4 Delete Old Service
-- [ ] Delete `app/services/gemini_service.py`
+- [x] Delete `app/services/gemini_service.py`
 
 ---
 
