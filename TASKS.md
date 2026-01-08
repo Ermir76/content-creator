@@ -401,19 +401,19 @@
 ## Phase 16: Environment Setup
 
 ### 16.1 Get API Keys
-- [ ] Get OpenAI API key from https://platform.openai.com/api-keys
-- [ ] Get Anthropic API key from https://console.anthropic.com/
-- [ ] Get X.AI API key (research availability)
+- [x] Get OpenAI API key from https://platform.openai.com/api-keys
+- [x] Get Anthropic API key from https://console.anthropic.com/
+- [x] Get X.AI API key (research availability)
 
 ### 16.2 Update .env File
-- [ ] Add `OPENAI_API_KEY=...`
-- [ ] Add `ANTHROPIC_API_KEY=...`
-- [ ] Add `XAI_API_KEY=...` (if available)
-- [ ] Keep existing `GOOGLE_API_KEY=...`
+- [x] Add `OPENAI_API_KEY=...`
+- [x] Add `ANTHROPIC_API_KEY=...`
+- [x] Add `XAI_API_KEY=...` (if available)
+- [x] Keep existing `GEMINI_API_KEY=...`
 
 ### 16.3 Verify .env is Gitignored
-- [ ] Confirm `.env` in `.gitignore`
-- [ ] Never commit API keys
+- [x] Confirm `.env` in `.gitignore`
+- [x] Never commit API keys
 
 ---
 

@@ -166,6 +166,7 @@ def try_generate_with_retry(
                 return content, model_name, regeneration_count
 
             except Exception as e:
+                print(f"⚠️ MODEL FAILED ({model_name}): {e}")
                 last_error = e
                 error_code = classify_error(e)
 

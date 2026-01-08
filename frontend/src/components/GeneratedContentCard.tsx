@@ -35,7 +35,7 @@ const PLATFORM_LABELS: Record<string, string> = {
 
 const MODEL_LABELS: Record<string, string> = {
   gemini: 'Gemini',
-  openai: 'GPT-4o',
+  openai: 'GPT-5',
   anthropic: 'Claude',
   xai: 'Grok',
 };
