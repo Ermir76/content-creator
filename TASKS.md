@@ -254,45 +254,45 @@
 ## Phase 11: Main Orchestration Service
 
 ### 11.1 Create Content Generator File
-- [ ] Create `app/services/content_generator.py`
-- [ ] Import all dependencies (providers, router, adapter, validator, etc.)
+- [x] Create `app/services/content_generator.py`
+- [x] Import all dependencies (providers, router, adapter, validator, etc.)
 
 ### 11.2 Implement Error Classification
-- [ ] Create `classify_error(error) -> str` function
-- [ ] Classify rate limit errors
-- [ ] Classify timeout errors
-- [ ] Classify API key errors
-- [ ] Classify network errors
-- [ ] Return error codes
+- [x] Create `classify_error(error) -> str` function
+- [x] Classify rate limit errors
+- [x] Classify timeout errors
+- [x] Classify API key errors
+- [x] Classify network errors
+- [x] Return error codes
 
 ### 11.3 Implement Retry Logic
-- [ ] Create `try_generate_with_retry(idea, platform, primary, fallback)` function
-- [ ] Loop through models (primary, then fallback)
-- [ ] For each model, attempt 2 times
-- [ ] Use RetryHandler for wait times
-- [ ] Validate output before returning
-- [ ] Record circuit breaker failures
-- [ ] Raise exception if all fail
+- [x] Create `try_generate_with_retry(idea, platform, primary, fallback)` function
+- [x] Loop through models (primary, then fallback)
+- [x] For each model, attempt 2 times
+- [x] Use RetryHandler for wait times
+- [x] Validate output before returning
+- [x] Record circuit breaker failures
+- [x] Raise exception if all fail
 
 ### 11.4 Implement Platform Generation
-- [ ] Create `generate_for_platform(idea, platform) -> PlatformResult` function
-- [ ] Get platform policy
-- [ ] Select models via router
-- [ ] Check circuit breaker
-- [ ] Try generation with retry
-- [ ] Validate output
-- [ ] Record success/failure
-- [ ] Log quality metrics
-- [ ] Return PlatformResult (success or error)
+- [x] Create `generate_for_platform(idea, platform) -> PlatformResult` function
+- [x] Get platform policy
+- [x] Select models via router
+- [x] Check circuit breaker
+- [x] Try generation with retry
+- [x] Validate output
+- [x] Record success/failure
+- [x] Log quality metrics
+- [x] Return PlatformResult (success or error)
 
 ### 11.5 Implement Main Generation Function
-- [ ] Create `generate_content(idea, platforms) -> GenerationResponse` function
-- [ ] Initialize circuit breaker
-- [ ] Loop through platforms
-- [ ] Call `generate_for_platform` for each
-- [ ] Collect all results
-- [ ] Count successes and failures
-- [ ] Return GenerationResponse
+- [x] Create `generate_content(idea, platforms) -> GenerationResponse` function
+- [x] Initialize circuit breaker
+- [x] Loop through platforms
+- [x] Call `generate_for_platform` for each
+- [x] Collect all results
+- [x] Count successes and failures
+- [x] Return GenerationResponse
 
 ---
 
