@@ -25,12 +25,12 @@ class GeminiProvider(AIProvider):
     def __init__(self):
         import google.generativeai as genai  # type: ignore
 
-        api_key = os.getenv("GOOGLE_API_KEY")
+        api_key = os.getenv("GEMINI_API_KEY")
         if not api_key:
-            raise ValueError("GOOGLE_API_KEY environment variable is not set")
+            raise ValueError("GEMINI_API_KEY environment variable is not set")
 
         genai.configure(api_key=api_key)  # type: ignore
-        self.model = genai.GenerativeModel('gemini-2.0-flash')  # type: ignore
+        self.model = genai.GenerativeModel("gemini-3-flash")  # type: ignore
 
     def generate(self, prompt: str) -> str:
         """Generate content using Gemini."""
@@ -53,10 +53,13 @@ class OpenAIProvider(AIProvider):
         else:
             try:
                 from openai import OpenAI
+
                 self.client = OpenAI(api_key=api_key)
                 self._has_key = True
             except ImportError:
-                raise ImportError("openai package not installed. Run: pip install openai")
+                raise ImportError(
+                    "openai package not installed. Run: pip install openai"
+                )
 
     def generate(self, prompt: str) -> str:
         """Generate content using OpenAI."""
@@ -64,10 +67,10 @@ class OpenAIProvider(AIProvider):
             raise ValueError("OPENAI_API_KEY not configured")
 
         response = self.client.chat.completions.create(
-            model="gpt-4o-mini",  # Using GPT-4o-mini for cost efficiency
+            model="gpt-5-mini",  # Using GPT-5-mini for cost efficiency
             messages=[{"role": "user", "content": prompt}],
             temperature=0.7,
-            max_tokens=1000
+            max_tokens=1000,
         )
         return (response.choices[0].message.content or "").strip()
 
@@ -87,10 +90,13 @@ class AnthropicProvider(AIProvider):
         else:
             try:
                 from anthropic import Anthropic
+
                 self.client = Anthropic(api_key=api_key)
                 self._has_key = True
             except ImportError:
-                raise ImportError("anthropic package not installed. Run: pip install anthropic")
+                raise ImportError(
+                    "anthropic package not installed. Run: pip install anthropic"
+                )
 
     def generate(self, prompt: str) -> str:
         """Generate content using Claude."""
@@ -98,13 +104,13 @@ class AnthropicProvider(AIProvider):
             raise ValueError("ANTHROPIC_API_KEY not configured")
 
         message = self.client.messages.create(
-            model="claude-3-5-haiku-20241022",  # Using Haiku for cost efficiency
+            model="claude-haiku-4-5-20250101",  # Using Claude Haiku 4.5
             max_tokens=1024,
-            messages=[{"role": "user", "content": prompt}]
+            messages=[{"role": "user", "content": prompt}],
         )
         # Get text from first content block
         content_block = message.content[0]
-        text = getattr(content_block, 'text', str(content_block))
+        text = getattr(content_block, "text", str(content_block))
         return text.strip()
 
     def get_name(self) -> str:
@@ -124,13 +130,13 @@ class XAIProvider(AIProvider):
             # Grok uses OpenAI-compatible API
             try:
                 from openai import OpenAI
-                self.client = OpenAI(
-                    api_key=api_key,
-                    base_url="https://api.x.ai/v1"
-                )
+
+                self.client = OpenAI(api_key=api_key, base_url="https://api.x.ai/v1")
                 self._has_key = True
             except ImportError:
-                raise ImportError("openai package not installed. Run: pip install openai")
+                raise ImportError(
+                    "openai package not installed. Run: pip install openai"
+                )
 
     def generate(self, prompt: str) -> str:
         """Generate content using Grok."""
@@ -138,10 +144,10 @@ class XAIProvider(AIProvider):
             raise ValueError("XAI_API_KEY not configured")
 
         response = self.client.chat.completions.create(
-            model="grok-2-latest",
+            model="grok-4-1-fast-reasoning",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.7,
-            max_tokens=1000
+            max_tokens=1000,
         )
         return (response.choices[0].message.content or "").strip()
 
@@ -155,11 +161,13 @@ def create_provider(model_name: str) -> AIProvider:
         "gemini": GeminiProvider,
         "openai": OpenAIProvider,
         "anthropic": AnthropicProvider,
-        "xai": XAIProvider
+        "xai": XAIProvider,
     }
 
     provider_class = providers.get(model_name.lower())
     if not provider_class:
-        raise ValueError(f"Unknown model: {model_name}. Available: {', '.join(providers.keys())}")
+        raise ValueError(
+            f"Unknown model: {model_name}. Available: {', '.join(providers.keys())}"
+        )
 
     return provider_class()
