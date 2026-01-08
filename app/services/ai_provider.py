@@ -1,6 +1,5 @@
 import os
 from abc import ABC, abstractmethod
-from typing import Optional
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -24,14 +23,14 @@ class GeminiProvider(AIProvider):
     """Google Gemini AI provider."""
 
     def __init__(self):
-        import google.generativeai as genai
+        import google.generativeai as genai  # type: ignore
 
         api_key = os.getenv("GOOGLE_API_KEY")
         if not api_key:
             raise ValueError("GOOGLE_API_KEY environment variable is not set")
 
-        genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel('gemini-2.0-flash')
+        genai.configure(api_key=api_key)  # type: ignore
+        self.model = genai.GenerativeModel('gemini-2.0-flash')  # type: ignore
 
     def generate(self, prompt: str) -> str:
         """Generate content using Gemini."""
@@ -70,7 +69,7 @@ class OpenAIProvider(AIProvider):
             temperature=0.7,
             max_tokens=1000
         )
-        return response.choices[0].message.content.strip()
+        return (response.choices[0].message.content or "").strip()
 
     def get_name(self) -> str:
         return "openai"
@@ -103,7 +102,10 @@ class AnthropicProvider(AIProvider):
             max_tokens=1024,
             messages=[{"role": "user", "content": prompt}]
         )
-        return message.content[0].text.strip()
+        # Get text from first content block
+        content_block = message.content[0]
+        text = getattr(content_block, 'text', str(content_block))
+        return text.strip()
 
     def get_name(self) -> str:
         return "anthropic"
@@ -141,7 +143,7 @@ class XAIProvider(AIProvider):
             temperature=0.7,
             max_tokens=1000
         )
-        return response.choices[0].message.content.strip()
+        return (response.choices[0].message.content or "").strip()
 
     def get_name(self) -> str:
         return "xai"
