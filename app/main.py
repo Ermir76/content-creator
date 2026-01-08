@@ -4,6 +4,9 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from app.database import Base, engine, get_db
 from app.models.models import User, GeneratedContent

@@ -7,7 +7,9 @@ class PromptAdapter:
     """Adapts prompts for different AI models and platforms."""
 
     @staticmethod
-    def adapt_prompt(idea: str, platform: str, model_name: str, voice_profile: str = None) -> str:
+    def adapt_prompt(
+        idea: str, platform: str, model_name: str, voice_profile: str = None
+    ) -> str:
         """
         Create a model-specific prompt for content generation.
 
@@ -39,16 +41,32 @@ class PromptAdapter:
 
         # Model-specific prompt templates
         if model_name == "openai":
-            return PromptAdapter._openai_prompt(idea, platform, char_limit, tone, features, format_style, voice_profile)
+            return PromptAdapter._openai_prompt(
+                idea, platform, char_limit, tone, features, format_style, voice_profile
+            )
         elif model_name == "anthropic":
-            return PromptAdapter._anthropic_prompt(idea, platform, char_limit, tone, features, format_style, voice_profile)
+            return PromptAdapter._anthropic_prompt(
+                idea, platform, char_limit, tone, features, format_style, voice_profile
+            )
         elif model_name == "xai":
-            return PromptAdapter._xai_prompt(idea, platform, char_limit, tone, features, format_style, voice_profile)
+            return PromptAdapter._xai_prompt(
+                idea, platform, char_limit, tone, features, format_style, voice_profile
+            )
         else:  # gemini or default
-            return PromptAdapter._gemini_prompt(idea, platform, char_limit, tone, features, format_style, voice_profile)
+            return PromptAdapter._gemini_prompt(
+                idea, platform, char_limit, tone, features, format_style, voice_profile
+            )
 
     @staticmethod
-    def _openai_prompt(idea: str, platform: str, char_limit: int, tone: str, features: str, format_style: str, voice: str) -> str:
+    def _openai_prompt(
+        idea: str,
+        platform: str,
+        char_limit: int,
+        tone: str,
+        features: str,
+        format_style: str,
+        voice: str,
+    ) -> str:
         """Structured prompt for OpenAI models."""
         return f"""You are an expert social media content creator. Create a {platform.upper()} post.
 
@@ -74,7 +92,15 @@ CRITICAL INSTRUCTIONS:
 Generate the post now:"""
 
     @staticmethod
-    def _anthropic_prompt(idea: str, platform: str, char_limit: int, tone: str, features: str, format_style: str, voice: str) -> str:
+    def _anthropic_prompt(
+        idea: str,
+        platform: str,
+        char_limit: int,
+        tone: str,
+        features: str,
+        format_style: str,
+        voice: str,
+    ) -> str:
         """Conversational prompt for Claude."""
         return f"""Hey! I need your help creating a great {platform.upper()} post.
 
@@ -91,7 +117,15 @@ A few things to keep in mind:
 Just write the post itself - no explanations or commentary needed. Make it authentic and engaging for {platform}!"""
 
     @staticmethod
-    def _xai_prompt(idea: str, platform: str, char_limit: int, tone: str, features: str, format_style: str, voice: str) -> str:
+    def _xai_prompt(
+        idea: str,
+        platform: str,
+        char_limit: int,
+        tone: str,
+        features: str,
+        format_style: str,
+        voice: str,
+    ) -> str:
         """Punchy, direct prompt for Grok."""
         return f"""Create a {platform.upper()} post. {tone.capitalize()} tone.
 
@@ -106,7 +140,15 @@ Rules:
 Just the post. No fluff. Go:"""
 
     @staticmethod
-    def _gemini_prompt(idea: str, platform: str, char_limit: int, tone: str, features: str, format_style: str, voice: str) -> str:
+    def _gemini_prompt(
+        idea: str,
+        platform: str,
+        char_limit: int,
+        tone: str,
+        features: str,
+        format_style: str,
+        voice: str,
+    ) -> str:
         """Detailed prompt for Gemini (current implementation style)."""
         return f"""Create a social media post for {platform.upper()} based on the following:
 

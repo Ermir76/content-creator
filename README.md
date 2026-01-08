@@ -1,6 +1,6 @@
 # Social Media Content Generator
 
-An AI-powered application that generates platform-specific social media content using Google Gemini AI. Simply describe your idea, select your platforms, and get optimized content ready to copy and paste!
+An AI-powered application that generates platform-specific social media content using **multiple AI models** with smart fallback. Simply describe your idea, select your platforms, and get optimized content ready to copy and paste!
 
 ![Tech Stack](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
 ![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
@@ -10,29 +10,46 @@ An AI-powered application that generates platform-specific social media content 
 
 ## Features
 
-- **AI-Powered Content Generation** - Uses Google Gemini 2.0 Flash for intelligent content creation
-- **Platform-Specific Optimization** - Tailored content for LinkedIn, Twitter, Reddit, and Instagram
+- **Multi-AI Content Generation** - Uses 4 AI models (Gemini, GPT-5, Claude, Grok) with automatic fallback
+- **Platform-Specific Optimization** - Tailored content for 6 platforms: LinkedIn, Twitter, Reddit, Instagram, Facebook, TikTok
+- **Smart Model Routing** - Each platform uses the best-suited AI model as primary
+- **Circuit Breaker Pattern** - Automatic failure detection and recovery
+- **Quality Tracking** - Logs which model generated content and validation status
 - **Toast Notifications** - Beautiful, non-intrusive notifications with Sonner
 - **Smart Form Validation** - Real-time validation with helpful error messages
 - **Copy to Clipboard** - One-click copy functionality with toast feedback
 - **Professional Dark Theme** - Sleek, modern UI with Shadcn/UI components
-- **Enhanced Loading States** - Smooth animations and loading indicators
-- **Engaging Empty States** - Helpful guidance when starting out
-- **Error Handling** - Comprehensive error messages with retry functionality
-- **Content History** - All generated content is saved to database
-- **Smooth Animations** - Fade-in effects and transitions throughout
+- **Error Handling** - Per-platform error cards with retry functionality
+- **Content History** - All generated content saved with quality metrics
 
-## Videolink
+## AI Models
 
+| Provider | Model | Used For |
+|----------|-------|----------|
+| **Google** | `gemini-3-flash` | Instagram (primary), Fallback for LinkedIn/Reddit |
+| **OpenAI** | `gpt-5-mini` | LinkedIn/Facebook (primary), Fallback for Twitter/TikTok |
+| **Anthropic** | `claude-haiku-4-5` | Reddit (primary) - Natural conversation |
+| **X.AI** | `grok-4-1-fast-reasoning` | Twitter/TikTok (primary) - Punchy content |
 
+### Platform → Model Routing
+
+| Platform | Primary Model | Fallback Model |
+|----------|---------------|----------------|
+| LinkedIn | GPT-5 | Gemini |
+| Twitter | Grok | GPT-5 |
+| Reddit | Claude | Gemini |
+| Instagram | Gemini | GPT-5 |
+| Facebook | GPT-5 | Gemini |
+| TikTok | Grok | GPT-5 |
 
 ## Tech Stack
 
 ### Backend
 - **FastAPI** - Modern, fast web framework for Python
-- **SQLAlchemy** - SQL toolkit and ORM
+- **SQLAlchemy** - SQL toolkit and ORM with Alembic migrations
 - **SQLite** - Lightweight database
-- **Google Gemini AI** - Advanced language model for content generation
+- **Multi-AI Architecture** - Gemini, OpenAI, Anthropic, X.AI providers
+- **Circuit Breaker** - Failure detection and auto-recovery
 - **Python 3.8+** - Programming language
 
 ### Frontend
@@ -51,7 +68,11 @@ Before you begin, ensure you have the following installed:
 - **Python 3.8 or higher**
 - **Node.js 18 or higher**
 - **npm or yarn**
-- **Google Gemini API Key** ([Get one here](https://makersuite.google.com/app/apikey))
+- **API Keys** (at least one required, all recommended):
+  - Gemini API Key ([Google AI Studio](https://makersuite.google.com/app/apikey))
+  - OpenAI API Key ([OpenAI Platform](https://platform.openai.com/api-keys))
+  - Anthropic API Key ([Anthropic Console](https://console.anthropic.com/))
+  - X.AI API Key ([X.AI](https://x.ai/))
 
 ## Quick Start
 
@@ -68,12 +89,28 @@ cd content-creator
 # Install Python dependencies
 pip install -r requirements.txt
 
-# Create .env file and add your Google API Key
-# The file should already exist, just add your key:
-GOOGLE_API_KEY=your_api_key_here
+# Create .env file with your API keys
+# At minimum, add GEMINI_API_KEY. Add others for full functionality.
 ```
 
-### 3. Frontend Setup
+### 3. Configure API Keys
+
+Create a `.env` file in the project root:
+
+```env
+# Required: At least one API key
+GEMINI_API_KEY=your_gemini_key_here
+
+# Optional: For multi-AI support
+OPENAI_API_KEY=your_openai_key_here
+ANTHROPIC_API_KEY=your_anthropic_key_here
+XAI_API_KEY=your_xai_key_here
+
+# Database (auto-created)
+DATABASE_URL=sqlite:///./database.sqlite
+```
+
+### 4. Frontend Setup
 
 ```bash
 # Navigate to frontend directory
@@ -83,7 +120,7 @@ cd frontend
 npm install
 ```
 
-### 4. Run the Application
+### 5. Run the Application
 
 **Terminal 1 - Start Backend:**
 ```bash
@@ -110,12 +147,13 @@ Frontend will be available at: `http://localhost:5173`
    - Example: "Tips for improving remote work productivity"
 
 3. **Select Platforms**
-   - Check one or more platforms (LinkedIn, Twitter, Reddit, Instagram)
-   - Each platform has specific character limits and formatting
+   - Check one or more platforms (LinkedIn, Twitter, Reddit, Instagram, Facebook, TikTok)
+   - Each platform uses its optimal AI model
 
 4. **Generate Content**
    - Click the "Generate Content" button
-   - Wait for AI to create platform-specific content
+   - Watch as AI creates platform-specific content
+   - See which AI model was used on each card
 
 5. **Copy & Use**
    - Click "Copy to Clipboard" on any generated content card
@@ -126,75 +164,101 @@ Frontend will be available at: `http://localhost:5173`
 ```
 content-creator/
 ├── app/                          # Backend application
+│   ├── config/                   # Platform policies & routing
+│   │   └── platform_policies.py
 │   ├── database/                 # Database configuration
-│   │   ├── __init__.py
 │   │   └── database.py
-│   ├── models/                   # SQLAlchemy models
-│   │   └── models.py
+│   ├── models/                   # SQLAlchemy & Pydantic models
+│   │   ├── models.py
+│   │   └── response_models.py
 │   ├── services/                 # Business logic
-│   │   └── gemini_service.py
+│   │   ├── ai_provider.py       # Multi-AI provider abstraction
+│   │   ├── content_generator.py # Main orchestration service
+│   │   ├── circuit_breaker.py   # Failure detection
+│   │   ├── model_router.py      # Platform → model routing
+│   │   ├── prompt_adapter.py    # Model-specific prompts
+│   │   ├── output_validator.py  # Content validation
+│   │   ├── retry_handler.py     # Retry logic
+│   │   └── quality_logger.py    # Metrics logging
 │   └── main.py                   # FastAPI app entry point
+├── alembic/                      # Database migrations
 ├── frontend/                     # React application
 │   ├── src/
-│   │   ├── components/           # React components
+│   │   ├── components/
 │   │   │   ├── ui/              # Shadcn/UI components
 │   │   │   ├── Layout.tsx
 │   │   │   ├── ContentComposer.tsx
 │   │   │   └── GeneratedContentCard.tsx
-│   │   ├── lib/                 # Utilities
-│   │   ├── App.tsx              # Main app component
-│   │   ├── main.tsx             # Entry point
-│   │   └── style.css            # Global styles
-│   ├── index.html
-│   ├── package.json
-│   ├── tailwind.config.js
-│   └── vite.config.ts
-├── .env                          # Environment variables
-├── .gitignore
-├── requirements.txt              # Python dependencies
+│   │   ├── App.tsx
+│   │   └── main.tsx
+│   └── package.json
+├── .env                          # Environment variables (gitignored)
+├── requirements.txt
 └── README.md
 ```
 
 ## Platform Specifications
 
-| Platform | Character Limit | Tone | Special Features |
-|----------|----------------|------|------------------|
-| **LinkedIn** | 3,000 | Professional & thought-provoking | 3-5 hashtags, line breaks for readability |
-| **Twitter** | 280 | Concise & engaging | 1-2 hashtags, every word counts |
-| **Reddit** | 40,000 | Conversational & authentic | No corporate speak, encourage discussion |
-| **Instagram** | 2,200 | Visual & inspiring | 10-15 hashtags, emojis, line breaks |
+| Platform | Character Limit | Tone | Primary AI |
+|----------|----------------|------|------------|
+| **LinkedIn** | 3,000 | Professional & thought-provoking | GPT-5 |
+| **Twitter** | 280 | Concise & engaging | Grok |
+| **Reddit** | 3,000 | Conversational & authentic | Claude |
+| **Instagram** | 2,200 | Visual & inspiring | Gemini |
+| **Facebook** | 3,000 | Casual-professional | GPT-5 |
+| **TikTok** | 2,200 | Energetic & trendy | Grok |
 
-## Configuration
+## API Endpoints
 
-### Environment Variables
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/` | Health check |
+| `GET` | `/health` | Health status |
+| `POST` | `/content/generate` | Generate content for platforms |
+| `GET` | `/content` | Get all generated content |
+| `GET` | `/circuit-breaker/status` | Check AI model availability |
+| `POST` | `/circuit-breaker/reset/{model}` | Reset failed model circuit |
 
-Create a `.env` file in the project root:
+### Generate Content Request
 
-```env
-# Database Configuration
-DATABASE_URL=sqlite:///./database.sqlite
-
-# Google Gemini API Key
-GOOGLE_API_KEY=your_actual_api_key_here
+```json
+POST /content/generate
+{
+  "idea_prompt": "Your content idea",
+  "platforms": ["linkedin", "twitter", "reddit", "instagram", "facebook", "tiktok"]
+}
 ```
 
-### API Endpoints
+### Response Structure
 
-- `GET /` - Health check
-- `POST /content/generate` - Generate platform-specific content
-  ```json
-  {
-    "idea_prompt": "Your content idea",
-    "platforms": ["linkedin", "twitter", "reddit", "instagram"]
-  }
-  ```
-- `GET /content` - Retrieve all generated content
+```json
+{
+  "results": [
+    {
+      "platform": "linkedin",
+      "success": true,
+      "content": "Generated post content...",
+      "model_used": "openai",
+      "char_count": 1234
+    },
+    {
+      "platform": "twitter",
+      "success": false,
+      "error": "Rate limit exceeded",
+      "error_code": "RATE_LIMIT"
+    }
+  ],
+  "success_count": 5,
+  "failure_count": 1,
+  "total_platforms": 6
+}
+```
 
 ## Troubleshooting
 
 ### Backend won't start
 - Ensure Python 3.8+ is installed: `python --version`
-- Verify all dependencies are installed: `pip install -r requirements.txt`
+- Verify dependencies: `pip install -r requirements.txt`
 - Check if port 8000 is available
 
 ### Frontend won't start
@@ -203,22 +267,22 @@ GOOGLE_API_KEY=your_actual_api_key_here
 - Check if port 5173 is available
 
 ### API Key Issues
-- Verify your API key is valid at [Google AI Studio](https://makersuite.google.com/)
+- Verify your API keys are valid
 - Ensure `.env` file is in the project root
 - Restart the backend server after changing `.env`
+- Check `/circuit-breaker/status` to see model availability
 
 ### Content Generation Fails
-- Check backend console for error messages
-- Verify internet connection (API calls to Google)
-- Ensure API key has sufficient quota
+- Check which models have valid API keys
+- The system automatically falls back to secondary models
+- If all models fail, check the error cards for specific reasons
 
-## Current Limitations (MVP)
+## Current Limitations
 
 - No auto-posting to social media (manual copy-paste required)
 - No scheduling functionality
 - No OAuth authentication
 - Single user only (no multi-user support)
-- No advanced voice profile customization
 
 ## Future Enhancements
 
@@ -229,12 +293,10 @@ GOOGLE_API_KEY=your_actual_api_key_here
 - [ ] Custom voice profile editor
 - [ ] Content analytics and insights
 - [ ] A/B testing for content variations
-- [ ] Content calendar view
-- [ ] Export to CSV/PDF
 
 ## Contributing
 
-This is a personal MVP project, but suggestions are welcome! Feel free to open issues or reach out.
+This is a personal project, but suggestions are welcome! Feel free to open issues or reach out.
 
 ## License
 
@@ -247,11 +309,14 @@ This project is for educational and personal use.
 
 ## Acknowledgments
 
-- [Google Gemini AI](https://deepmind.google/technologies/gemini/) for the powerful language model
-- [Shadcn/UI](https://ui.shadcn.com/) for the beautiful component library
-- [FastAPI](https://fastapi.tiangolo.com/) for the excellent Python framework
-- [Lucide Icons](https://lucide.dev/) for the icon set
+- [Google Gemini AI](https://deepmind.google/technologies/gemini/)
+- [OpenAI](https://openai.com/)
+- [Anthropic Claude](https://anthropic.com/)
+- [X.AI Grok](https://x.ai/)
+- [Shadcn/UI](https://ui.shadcn.com/)
+- [FastAPI](https://fastapi.tiangolo.com/)
+- [Lucide Icons](https://lucide.dev/)
 
 ---
 
-Built with FastAPI, React, and Google Gemini AI
+Built with FastAPI, React, and Multi-AI Architecture (Gemini, GPT-5, Claude, Grok)

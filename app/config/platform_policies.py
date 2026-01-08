@@ -10,7 +10,7 @@ PLATFORM_POLICIES: Dict[str, Dict[str, Any]] = {
         "features": "Use line breaks for readability, include relevant hashtags (3-5), and encourage engagement",
         "format": "Start with a hook, provide value, end with a call-to-action",
         "primary_model": "openai",
-        "fallback_model": "gemini"
+        "fallback_model": "gemini",
     },
     "twitter": {
         "char_limit": 280,
@@ -18,15 +18,15 @@ PLATFORM_POLICIES: Dict[str, Dict[str, Any]] = {
         "features": "Use 1-2 relevant hashtags, make every word count",
         "format": "Hook in first line, deliver value quickly",
         "primary_model": "xai",  # Grok optimized for Twitter/X
-        "fallback_model": "openai"
+        "fallback_model": "openai",
     },
     "reddit": {
-        "char_limit": 40000,
+        "char_limit": 3000,
         "tone": "conversational and authentic",
         "features": "Be genuine, avoid corporate speak, provide real value to the community",
         "format": "Engaging title mindset, detailed explanation, encourage discussion",
         "primary_model": "anthropic",  # Claude for natural conversation
-        "fallback_model": "gemini"
+        "fallback_model": "gemini",
     },
     "instagram": {
         "char_limit": 2200,
@@ -34,15 +34,15 @@ PLATFORM_POLICIES: Dict[str, Dict[str, Any]] = {
         "features": "Use emojis strategically, include 10-15 relevant hashtags at the end, line breaks for readability",
         "format": "Attention-grabbing opening, storytelling, call-to-action, hashtags at the end",
         "primary_model": "gemini",
-        "fallback_model": "openai"
+        "fallback_model": "openai",
     },
     "facebook": {
-        "char_limit": 63206,
+        "char_limit": 3000,
         "tone": "casual-professional and relatable",
         "features": "Conversational yet polished, emojis acceptable, questions to encourage engagement",
         "format": "Personal hook, value delivery, call-to-action or question",
         "primary_model": "openai",
-        "fallback_model": "gemini"
+        "fallback_model": "gemini",
     },
     "tiktok": {
         "char_limit": 2200,
@@ -50,8 +50,8 @@ PLATFORM_POLICIES: Dict[str, Dict[str, Any]] = {
         "features": "Short, punchy, emoji-heavy, trending hashtags, call-to-action",
         "format": "Immediate hook, quick value, strong CTA",
         "primary_model": "xai",  # Grok for punchy content
-        "fallback_model": "openai"
-    }
+        "fallback_model": "openai",
+    },
 }
 
 
@@ -62,7 +62,7 @@ DEFAULT_POLICY = {
     "features": "Clear and valuable content",
     "format": "Hook, value, call-to-action",
     "primary_model": "gemini",
-    "fallback_model": "openai"
+    "fallback_model": "openai",
 }
 
 

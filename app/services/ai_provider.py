@@ -30,7 +30,7 @@ class GeminiProvider(AIProvider):
             raise ValueError("GEMINI_API_KEY environment variable is not set")
 
         genai.configure(api_key=api_key)  # type: ignore
-        self.model = genai.GenerativeModel("gemini-3-flash")  # type: ignore
+        self.model = genai.GenerativeModel("gemini-3-flash-preview")  # type: ignore
 
     def generate(self, prompt: str) -> str:
         """Generate content using Gemini."""
@@ -69,8 +69,6 @@ class OpenAIProvider(AIProvider):
         response = self.client.chat.completions.create(
             model="gpt-5-mini",  # Using GPT-5-mini for cost efficiency
             messages=[{"role": "user", "content": prompt}],
-            temperature=0.7,
-            max_tokens=1000,
         )
         return (response.choices[0].message.content or "").strip()
 
@@ -104,7 +102,7 @@ class AnthropicProvider(AIProvider):
             raise ValueError("ANTHROPIC_API_KEY not configured")
 
         message = self.client.messages.create(
-            model="claude-haiku-4-5-20250101",  # Using Claude Haiku 4.5
+            model="claude-haiku-4-5",  # Using Claude Haiku 4.5
             max_tokens=1024,
             messages=[{"role": "user", "content": prompt}],
         )
@@ -121,7 +119,7 @@ class XAIProvider(AIProvider):
     """X.AI (Grok) provider."""
 
     def __init__(self):
-        api_key = os.getenv("XAI_API_KEY")
+        api_key = os.getenv("GROK_API_KEY")
         if not api_key:
             # Provide stub for now if no API key
             self.client = None
@@ -141,7 +139,7 @@ class XAIProvider(AIProvider):
     def generate(self, prompt: str) -> str:
         """Generate content using Grok."""
         if not self._has_key or not self.client:
-            raise ValueError("XAI_API_KEY not configured")
+            raise ValueError("GROK_API_KEY not configured")
 
         response = self.client.chat.completions.create(
             model="grok-4-1-fast-reasoning",
