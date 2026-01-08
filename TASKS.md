@@ -321,26 +321,26 @@
 ## Phase 13: Frontend - App.tsx Updates
 
 ### 13.1 Update Interfaces
-- [ ] Edit `frontend/src/App.tsx`
-- [ ] Update `GeneratedContent` interface to match `PlatformResult`:
-  - [ ] Add `success: boolean`
-  - [ ] Make `content_text` optional
-  - [ ] Add `model_used?: string`
-  - [ ] Add `error?: string`
-  - [ ] Add `error_code?: string`
+- [x] Edit `frontend/src/App.tsx`
+- [x] Update `GeneratedContent` interface to match `PlatformResult`:
+  - [x] Add `success: boolean`
+  - [x] Make `content_text` optional
+  - [x] Add `model_used?: string`
+  - [x] Add `error?: string`
+  - [x] Add `error_code?: string`
 
 ### 13.2 Update handleGenerate Function
-- [ ] Parse response with new structure:
-  - [ ] Extract `results`, `success_count`, `failure_count`
-- [ ] Set generated content with results array
-- [ ] Update toast notifications:
-  - [ ] Success: all platforms succeeded
-  - [ ] Error: all platforms failed
-  - [ ] Warning: partial success
+- [x] Parse response with new structure:
+  - [x] Extract `results`, `success_count`, `failure_count`
+- [x] Set generated content with results array
+- [x] Update toast notifications:
+  - [x] Success: all platforms succeeded
+  - [x] Error: all platforms failed
+  - [x] Warning: partial success
 
 ### 13.3 Update Error Handling
-- [ ] Only catch network/server errors in catch block
-- [ ] Platform-specific errors now in results array
+- [x] Only catch network/server errors in catch block
+- [x] Platform-specific errors now in results array
 
 ---
 

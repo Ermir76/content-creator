@@ -6,17 +6,27 @@ import { ArrowUp, Loader2 } from 'lucide-react';
 import { Toaster, toast } from 'sonner';
 import axios from 'axios';
 
-interface GeneratedContent {
-  id: number;
-  idea_prompt: string;
+// Updated interface to match PlatformResult from backend
+interface PlatformResult {
   platform: string;
-  content_text: string;
-  status: string;
-  created_at: string;
+  success: boolean;
+  content?: string;  // Optional - only present on success
+  model_used?: string;
+  error?: string;
+  error_code?: string;
+  char_count?: number;
+}
+
+// Response structure from /content/generate endpoint
+interface GenerationResponse {
+  results: PlatformResult[];
+  success_count: number;
+  failure_count: number;
+  total_platforms: number;
 }
 
 function App() {
-  const [generatedContent, setGeneratedContent] = useState<GeneratedContent[]>([]);
+  const [generatedContent, setGeneratedContent] = useState<PlatformResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [lastRequest, setLastRequest] = useState<{ ideaPrompt: string; platforms: string[] } | null>(null);
 
@@ -25,29 +35,52 @@ function App() {
     setLastRequest({ ideaPrompt, platforms });
 
     try {
-      const response = await axios.post('/content/generate', {
+      const response = await axios.post<GenerationResponse>('/content/generate', {
         idea_prompt: ideaPrompt,
         platforms: platforms,
       });
 
-      setGeneratedContent(response.data);
-      toast.success('Content generated successfully!', {
-        description: `Generated ${response.data.length} piece${response.data.length > 1 ? 's' : ''} of content`
-      });
+      const { results, success_count, failure_count, total_platforms } = response.data;
+
+      // Set generated content with results array
+      setGeneratedContent(results);
+
+      // Show appropriate toast notification based on results
+      if (failure_count === 0) {
+        // All platforms succeeded
+        toast.success('Content generated successfully!', {
+          description: `Generated ${success_count} piece${success_count > 1 ? 's' : ''} of content`
+        });
+      } else if (success_count === 0) {
+        // All platforms failed
+        toast.error('Failed to generate content', {
+          description: `All ${total_platforms} platform${total_platforms > 1 ? 's' : ''} failed. Check the results for details.`,
+          action: {
+            label: 'Retry',
+            onClick: handleRetry
+          }
+        });
+      } else {
+        // Partial success
+        toast.warning('Partial success', {
+          description: `${success_count} succeeded, ${failure_count} failed. Check the results for details.`
+        });
+      }
     } catch (err) {
       console.error('Error generating content:', err);
+      // Only catch network/server errors - platform-specific errors are in results array
       if (axios.isAxiosError(err)) {
-        if (err.response?.status === 500) {
-          toast.error('Server error', {
-            description: 'Please check if the backend is running and your API key is configured.',
+        if (err.code === 'ERR_NETWORK') {
+          toast.error('Cannot connect to server', {
+            description: 'Make sure the backend is running at http://localhost:8000',
             action: lastRequest ? {
               label: 'Retry',
               onClick: handleRetry
             } : undefined
           });
-        } else if (err.code === 'ERR_NETWORK') {
-          toast.error('Cannot connect to server', {
-            description: 'Make sure the backend is running at http://localhost:8000',
+        } else if (err.response?.status === 500) {
+          toast.error('Server error', {
+            description: 'Please check if the backend is running and your API key is configured.',
             action: lastRequest ? {
               label: 'Retry',
               onClick: handleRetry
@@ -82,6 +115,14 @@ function App() {
     }
   };
 
+  // Handler for retrying a single platform
+  const handleRetryPlatform = (platform: string) => {
+    if (lastRequest) {
+      // Retry just this one platform
+      handleGenerate(lastRequest.ideaPrompt, [platform]);
+    }
+  };
+
   return (
     <Layout>
       <Toaster position="top-right" richColors />
@@ -113,12 +154,16 @@ function App() {
           <div className="max-w-3xl mx-auto space-y-6">
             <h2 className="text-2xl font-bold text-white">Generated Content</h2>
             <div className="grid gap-6">
-              {generatedContent.map((content) => (
+              {generatedContent.map((result, index) => (
                 <GeneratedContentCard
-                  key={content.id}
-                  platform={content.platform}
-                  content={content.content_text}
-                  createdAt={content.created_at}
+                  key={`${result.platform}-${index}`}
+                  platform={result.platform}
+                  success={result.success}
+                  content={result.content}
+                  modelUsed={result.model_used}
+                  error={result.error}
+                  errorCode={result.error_code}
+                  onRetry={() => handleRetryPlatform(result.platform)}
                 />
               ))}
             </div>
@@ -144,13 +189,13 @@ function App() {
                 </div>
                 <div className="flex flex-wrap gap-3 justify-center mt-4">
                   <div className="px-4 py-2 bg-slate-700/50 rounded-full text-sm text-slate-300">
-                    ✨ AI-Powered
+                    ✨ Multi-AI Powered
                   </div>
                   <div className="px-4 py-2 bg-slate-700/50 rounded-full text-sm text-slate-300">
                     🎯 Platform-Specific
                   </div>
                   <div className="px-4 py-2 bg-slate-700/50 rounded-full text-sm text-slate-300">
-                    ⚡ Instant Results
+                    ⚡ Smart Fallback
                   </div>
                 </div>
               </div>
