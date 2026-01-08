@@ -347,29 +347,29 @@
 ## Phase 14: Frontend - GeneratedContentCard Updates
 
 ### 14.1 Update Component Interface
-- [ ] Edit `frontend/src/components/GeneratedContentCard.tsx`
-- [ ] Update props interface:
-  - [ ] Add `success: boolean`
-  - [ ] Make `content` optional
-  - [ ] Add `model_used?: string`
-  - [ ] Add `error?: string`
-  - [ ] Add `error_code?: string`
-  - [ ] Add `onRetry?: (platform: string) => void`
+- [x] Edit `frontend/src/components/GeneratedContentCard.tsx`
+- [x] Update props interface:
+  - [x] Add `success: boolean`
+  - [x] Make `content` optional
+  - [x] Add `model_used?: string`
+  - [x] Add `error?: string`
+  - [x] Add `error_code?: string`
+  - [x] Add `onRetry?: (platform: string) => void`
 
 ### 14.2 Implement Error Card View
-- [ ] Add conditional rendering for `!success`
-- [ ] Show error card with:
-  - [ ] Destructive border
-  - [ ] Platform badge with destructive variant
-  - [ ] Error title
-  - [ ] Error message
-  - [ ] Conditional message for RATE_LIMIT
-  - [ ] Retry button (if onRetry provided)
+- [x] Add conditional rendering for `!success`
+- [x] Show error card with:
+  - [x] Destructive border
+  - [x] Platform badge with destructive variant
+  - [x] Error title
+  - [x] Error message
+  - [x] Conditional message for RATE_LIMIT
+  - [x] Retry button (if onRetry provided)
 
 ### 14.3 Update Success Card View
-- [ ] Keep existing content display
-- [ ] Add model badge showing which AI was used
-- [ ] Position badges: platform on left, model on right
+- [x] Keep existing content display
+- [x] Add model badge showing which AI was used
+- [x] Position badges: platform on left, model on right
 
 ---
 
