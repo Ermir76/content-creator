@@ -6,9 +6,9 @@ error handling, and validation for generating social media content.
 """
 
 import time
-from typing import Tuple
+from typing import Optional, Tuple
 
-from app.models.response_models import PlatformResult, GenerationResponse
+from app.models.response_models import GenerationResponse, PlatformResult
 from app.services.ai_provider import AIProvider
 from app.services.circuit_breaker import CircuitBreaker
 from app.services.model_router import ModelRouter
@@ -90,7 +90,7 @@ def classify_error(error: Exception) -> str:
 class GenerationError(Exception):
     """Exception raised when all generation attempts fail."""
 
-    def __init__(self, message: str, error_code: str, model_used: str = None):
+    def __init__(self, message: str, error_code: str, model_used: Optional[str] = None):
         super().__init__(message)
         self.error_code = error_code
         self.model_used = model_used
@@ -102,7 +102,7 @@ def try_generate_with_retry(
     primary: AIProvider,
     fallback: AIProvider,
     circuit_breaker: CircuitBreaker,
-    voice_profile: str = None,
+    voice_profile: Optional[str] = None,
     max_attempts_per_model: int = 2,
 ) -> Tuple[str, str, int]:
     """
@@ -146,7 +146,7 @@ def try_generate_with_retry(
                     idea=idea,
                     platform=platform,
                     model_name=model_name,
-                    voice_profile=voice_profile,
+                    voice_profile=voice_profile if voice_profile is not None else "",
                 )
 
                 # Generate content
@@ -205,8 +205,8 @@ _circuit_breaker = CircuitBreaker(failure_threshold=3, timeout=300)
 def generate_for_platform(
     idea: str,
     platform: str,
-    voice_profile: str = None,
-    circuit_breaker: CircuitBreaker = None,
+    voice_profile: Optional[str] = None,
+    circuit_breaker: Optional[CircuitBreaker] = None,
 ) -> PlatformResult:
     """
     Generate content for a single platform.
@@ -288,7 +288,7 @@ def generate_for_platform(
 
 
 def generate_content(
-    idea: str, platforms: list[str], voice_profile: str = None
+    idea: str, platforms: list[str], voice_profile: Optional[str] = None
 ) -> GenerationResponse:
     """
     Generate content for multiple platforms.
@@ -347,7 +347,7 @@ def get_circuit_breaker_status() -> dict:
     return {model: _circuit_breaker.get_status(model) for model in models}
 
 
-def reset_circuit_breaker(model_name: str = None) -> None:
+def reset_circuit_breaker(model_name: Optional[str] = None) -> None:
     """
     Reset circuit breaker for a specific model or all models.
 

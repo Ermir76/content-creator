@@ -1,7 +1,7 @@
 """Circuit breaker pattern for failing AI models."""
 
 import time
-from typing import Dict, Optional
+from typing import Any, Dict
 
 
 class CircuitBreaker:
@@ -94,7 +94,7 @@ class CircuitBreaker:
         if model_name in self.opened_at:
             del self.opened_at[model_name]
 
-    def get_status(self, model_name: str) -> Dict[str, any]:
+    def get_status(self, model_name: str) -> Dict[str, Any]:
         """
         Get current status of a model's circuit.
 
