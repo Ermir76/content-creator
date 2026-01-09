@@ -1,15 +1,15 @@
 # UI Enhancement Tasks
 
 ## Phase 1: Theme System
-- [ ] Create theme context with light/dark state
-- [ ] Add localStorage persistence for theme preference
-- [ ] Create theme toggle button component
-- [ ] Test theme switching works
+- [x] Create theme context with light/dark state
+- [x] Add localStorage persistence for theme preference
+- [x] Create theme toggle button component
+- [x] Test theme switching works
 
 ## Phase 2: API and Types
-- [ ] Define TypeScript interfaces for content history
-- [ ] Create API service to fetch saved content from backend
-- [ ] Test API connection
+- [x] Define TypeScript interfaces for content history
+- [x] Create API service to fetch saved content from backend
+- [x] Test API connection
 
 ## Phase 3: History View
 - [ ] Create card component to display individual history items
