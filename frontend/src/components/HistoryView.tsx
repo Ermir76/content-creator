@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Loader2, History, AlertCircle } from 'lucide-react';
 import { HistoryCard } from './HistoryCard';
 import { HistoryFilters } from './HistoryFilters';
@@ -31,6 +31,12 @@ export function HistoryView() {
         };
 
         fetchHistory();
+    }, []);
+
+    // Handle delete - removes item from state after successful API call
+    const handleDelete = useCallback(async (id: number) => {
+        await contentApi.deleteContent(id);
+        setItems(prev => prev.filter(item => item.id !== id));
     }, []);
 
     // Filter items based on search and platform
@@ -104,7 +110,7 @@ export function HistoryView() {
                             className="animate-in fade-in slide-in-from-bottom-4"
                             style={{ animationDelay: `${Math.min(index * 50, 300)}ms` }}
                         >
-                            <HistoryCard item={item} />
+                            <HistoryCard item={item} onDelete={handleDelete} />
                         </div>
                     ))}
                 </div>
@@ -116,7 +122,7 @@ export function HistoryView() {
                     </h3>
                     <p className="mt-2 text-slate-500 dark:text-slate-400">
                         {items.length === 0
-                            ? 'Generate some content to see it here!'
+                            ? 'Save some generated content to see it here!'
                             : 'Try adjusting your filters.'}
                     </p>
                 </div>

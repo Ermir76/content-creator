@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Copy, Check, ChevronDown, ChevronUp, Cpu, Calendar } from 'lucide-react';
+import { Copy, Check, ChevronDown, ChevronUp, Cpu, Calendar, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { ContentHistoryItem } from '../types/content';
 
@@ -40,11 +40,13 @@ const MODEL_COLORS: Record<string, string> = {
 
 interface HistoryCardProps {
     item: ContentHistoryItem;
+    onDelete?: (id: number) => Promise<void>;
 }
 
-export function HistoryCard({ item }: HistoryCardProps) {
+export function HistoryCard({ item, onDelete }: HistoryCardProps) {
     const [copied, setCopied] = useState(false);
     const [expanded, setExpanded] = useState(false);
+    const [deleting, setDeleting] = useState(false);
 
     const platformColor = PLATFORM_COLORS[item.platform.toLowerCase()] || 'bg-gray-600';
     const platformLabel = PLATFORM_LABELS[item.platform.toLowerCase()] || item.platform;
@@ -63,6 +65,38 @@ export function HistoryCard({ item }: HistoryCardProps) {
             console.error('Failed to copy:', err);
             toast.error('Failed to copy');
         }
+    };
+
+    const handleDelete = async () => {
+        if (!onDelete || deleting) return;
+
+        // Confirmation toast
+        toast('Delete this content?', {
+            description: `This will permanently remove the ${platformLabel} content.`,
+            action: {
+                label: 'Delete',
+                onClick: async () => {
+                    setDeleting(true);
+                    try {
+                        await onDelete(item.id);
+                        toast.success('Content deleted', {
+                            description: `${platformLabel} content removed from history`
+                        });
+                    } catch (err) {
+                        console.error('Failed to delete:', err);
+                        toast.error('Failed to delete', {
+                            description: 'Please try again'
+                        });
+                    } finally {
+                        setDeleting(false);
+                    }
+                }
+            },
+            cancel: {
+                label: 'Cancel',
+                onClick: () => { }
+            }
+        });
     };
 
     const formatDate = (dateString: string) => {
@@ -95,23 +129,17 @@ export function HistoryCard({ item }: HistoryCardProps) {
                         {formatDate(item.created_at)}
                     </div>
                 </div>
-                {/* Idea prompt preview */}
                 <p className="text-xs text-slate-500 dark:text-slate-400 truncate italic">
                     "{item.idea_prompt}"
                 </p>
             </CardHeader>
             <CardContent className="space-y-3">
-                {/* Content Text with scrollable area */}
-                <div
-                    className={`bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700/50 ${expanded ? '' : 'card-scroll'
-                        }`}
-                >
+                <div className={`bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700/50 ${expanded ? '' : 'card-scroll'}`}>
                     <p className="text-sm whitespace-pre-wrap leading-relaxed text-slate-700 dark:text-slate-200">
                         {item.content_text}
                     </p>
                 </div>
 
-                {/* Character count */}
                 {item.char_count && (
                     <div className="text-xs text-slate-400 dark:text-slate-500 text-right">
                         {item.char_count} characters
@@ -142,10 +170,7 @@ export function HistoryCard({ item }: HistoryCardProps) {
                         onClick={handleCopy}
                         variant="outline"
                         size="sm"
-                        className={`flex-1 transition-all ${copied
-                                ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700 text-green-600 dark:text-green-400'
-                                : ''
-                            }`}
+                        className={`flex-1 transition-all ${copied ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700 text-green-600 dark:text-green-400' : ''}`}
                         disabled={copied}
                     >
                         {copied ? (
@@ -160,6 +185,18 @@ export function HistoryCard({ item }: HistoryCardProps) {
                             </>
                         )}
                     </Button>
+                    {onDelete && (
+                        <Button
+                            onClick={handleDelete}
+                            variant="outline"
+                            size="sm"
+                            className="border-red-300 dark:border-red-600 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                            disabled={deleting}
+                        >
+                            <Trash2 className={`mr-1 h-4 w-4 ${deleting ? 'animate-pulse' : ''}`} />
+                            {deleting ? 'Deleting...' : 'Delete'}
+                        </Button>
+                    )}
                 </div>
             </CardContent>
         </Card>

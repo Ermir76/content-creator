@@ -2,17 +2,19 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Copy, Check, AlertCircle, RefreshCw, Cpu, ChevronDown, ChevronUp } from 'lucide-react';
+import { Copy, Check, AlertCircle, RefreshCw, Cpu, ChevronDown, ChevronUp, Save, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface GeneratedContentCardProps {
   platform: string;
   success: boolean;
-  content?: string;  // Optional - only present on success
+  content?: string;
   modelUsed?: string;
   error?: string;
   errorCode?: string;
+  ideaPrompt?: string; // Added for save functionality
   onRetry?: () => void;
+  onSave?: () => Promise<void>; // Added for save functionality
 }
 
 const PLATFORM_COLORS: Record<string, string> = {
@@ -64,10 +66,13 @@ export function GeneratedContentCard({
   modelUsed,
   error,
   errorCode,
-  onRetry
+  onRetry,
+  onSave
 }: GeneratedContentCardProps) {
   const [copied, setCopied] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const handleCopy = async () => {
     if (!content) return;
@@ -83,6 +88,25 @@ export function GeneratedContentCard({
       toast.error('Failed to copy', {
         description: 'Please try again'
       });
+    }
+  };
+
+  const handleSave = async () => {
+    if (!onSave || saved || saving) return;
+    setSaving(true);
+    try {
+      await onSave();
+      setSaved(true);
+      toast.success('Content saved!', {
+        description: `${platformLabel} content saved to history`
+      });
+    } catch (err) {
+      console.error('Failed to save:', err);
+      toast.error('Failed to save', {
+        description: 'Please try again'
+      });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -110,7 +134,6 @@ export function GeneratedContentCard({
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Error Message */}
           <div className="flex items-start gap-3 p-4 bg-red-100 dark:bg-red-900/30 rounded-lg border border-red-200 dark:border-red-500/30">
             <AlertCircle className="w-5 h-5 text-red-500 dark:text-red-400 mt-0.5 flex-shrink-0" />
             <div className="space-y-1">
@@ -123,8 +146,6 @@ export function GeneratedContentCard({
               )}
             </div>
           </div>
-
-          {/* Retry Button */}
           {onRetry && (
             <Button
               onClick={onRetry}
@@ -142,13 +163,20 @@ export function GeneratedContentCard({
 
   // Success Card View
   return (
-    <Card className="card-hover bg-white dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 overflow-hidden">
+    <Card className={`card-hover bg-white dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 overflow-hidden ${saved ? 'ring-2 ring-green-500/50' : ''}`}>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <Badge className={`${platformColor} text-white shadow-sm transition-transform hover:scale-105`}>
-            {platformLabel}
-          </Badge>
-          {/* Model Badge */}
+          <div className="flex items-center gap-2">
+            <Badge className={`${platformColor} text-white shadow-sm transition-transform hover:scale-105`}>
+              {platformLabel}
+            </Badge>
+            {saved && (
+              <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 border-green-200 dark:border-green-700">
+                <CheckCircle className="w-3 h-3 mr-1" />
+                Saved
+              </Badge>
+            )}
+          </div>
           {modelUsed && (
             <Badge variant="outline" className={`${modelColor} text-xs`}>
               <Cpu className="w-3 h-3 mr-1" />
@@ -158,17 +186,12 @@ export function GeneratedContentCard({
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
-        {/* Content Text with scrollable area */}
-        <div
-          className={`bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700/50 ${expanded ? '' : 'card-scroll'
-            }`}
-        >
+        <div className={`bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700/50 ${expanded ? '' : 'card-scroll'}`}>
           <p className="text-sm whitespace-pre-wrap leading-relaxed text-slate-700 dark:text-slate-200">
             {content}
           </p>
         </div>
 
-        {/* Character count */}
         {content && (
           <div className="text-xs text-slate-400 dark:text-slate-500 text-right">
             {content.length} characters
@@ -199,10 +222,7 @@ export function GeneratedContentCard({
             onClick={handleCopy}
             variant="outline"
             size="sm"
-            className={`flex-1 transition-all ${copied
-                ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700 text-green-600 dark:text-green-400'
-                : ''
-              }`}
+            className={`flex-1 transition-all ${copied ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700 text-green-600 dark:text-green-400' : ''}`}
             disabled={copied}
           >
             {copied ? (
@@ -217,6 +237,35 @@ export function GeneratedContentCard({
               </>
             )}
           </Button>
+          {onSave && (
+            <Button
+              onClick={handleSave}
+              variant="outline"
+              size="sm"
+              className={`flex-1 transition-all ${saved
+                  ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700 text-green-600 dark:text-green-400'
+                  : 'border-blue-300 dark:border-blue-600 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20'
+                }`}
+              disabled={saved || saving}
+            >
+              {saved ? (
+                <>
+                  <CheckCircle className="mr-1 h-4 w-4" />
+                  Saved
+                </>
+              ) : saving ? (
+                <>
+                  <Save className="mr-1 h-4 w-4 animate-pulse" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="mr-1 h-4 w-4" />
+                  Save
+                </>
+              )}
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>
