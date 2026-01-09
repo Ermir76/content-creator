@@ -1,6 +1,7 @@
 """Prompt adaptation for different AI models."""
 
 from typing import Optional
+import textwrap
 
 from app.config.platform_policies import get_platform_policy
 
@@ -33,30 +34,75 @@ class PromptAdapter:
         # Get platform specifications
         policy = get_platform_policy(platform)
         char_limit = policy.get("char_limit", 2000)
+        target_chars = policy.get("target_chars")  # Soft target
         tone = policy.get("tone", "engaging")
         features = policy.get("features", "")
         format_style = policy.get("format", "")
+        examples = policy.get("examples", [])
 
-        # Default voice if not provided
+        # Determine strict char limit for prompt instructions
+        # If target_chars is present, we might want to mention it.
+        # But char_limit is the hard stop.
+
+        # Default voice logic:
+        # 1. Use passed voice_profile if valid
+        # 2. Use policy-level voice_profile if exists
+        # 3. Fallback to generic default
         if not voice_profile:
-            voice_profile = "Professional, engaging, and authentic. Uses storytelling and practical examples."
+            voice_profile = policy.get(
+                "voice_profile",
+                "Professional, engaging, and authentic. Uses storytelling and practical examples.",
+            )
+
+        # Update char_limit description if target exists
+        char_instruction = f"Maximum {char_limit} characters"
+        if target_chars:
+            char_instruction += f" (Target ~{target_chars} characters)"
 
         # Model-specific prompt templates
         if model_name == "openai":
             return PromptAdapter._openai_prompt(
-                idea, platform, char_limit, tone, features, format_style, voice_profile
+                idea,
+                platform,
+                char_instruction,
+                tone,
+                features,
+                format_style,
+                voice_profile,
+                examples,
             )
         elif model_name == "anthropic":
             return PromptAdapter._anthropic_prompt(
-                idea, platform, char_limit, tone, features, format_style, voice_profile
+                idea,
+                platform,
+                char_instruction,
+                tone,
+                features,
+                format_style,
+                voice_profile,
+                examples,
             )
         elif model_name == "xai":
             return PromptAdapter._xai_prompt(
-                idea, platform, char_limit, tone, features, format_style, voice_profile
+                idea,
+                platform,
+                char_instruction,
+                tone,
+                features,
+                format_style,
+                voice_profile,
+                examples,
             )
         else:  # gemini or default
             return PromptAdapter._gemini_prompt(
-                idea, platform, char_limit, tone, features, format_style, voice_profile
+                idea,
+                platform,
+                char_instruction,
+                tone,
+                features,
+                format_style,
+                voice_profile,
+                examples,
             )
 
     @staticmethod
@@ -68,8 +114,24 @@ class PromptAdapter:
         features: str,
         format_style: str,
         voice: str,
+        examples: list[str] = None,
     ) -> str:
         """Structured prompt for OpenAI models."""
+
+        limit_desc = str(char_limit) if isinstance(char_limit, int) else char_limit
+
+        examples_section = ""
+        if examples:
+            formatted_examples = "\n\n".join(
+                [
+                    f"Example {i + 1}:\n{textwrap.dedent(ex).strip()}"
+                    for i, ex in enumerate(examples)
+                ]
+            )
+            examples_section = (
+                f"\n\nREFERENCE EXAMPLES (EMULATE THIS STYLE):\n{formatted_examples}"
+            )
+
         return f"""You are an expert social media content creator. Create a {platform.upper()} post.
 
 TASK: Generate engaging content for {platform.upper()}
@@ -78,16 +140,16 @@ CONTENT IDEA:
 {idea}
 
 REQUIREMENTS:
-1. Character Limit: Maximum {char_limit} characters
+1. Character Limit: {limit_desc}
 2. Tone: {tone}
 3. Style: {voice}
 4. Features: {features}
-5. Format: {format_style}
+5. Format: {format_style}{examples_section}
 
 CRITICAL INSTRUCTIONS:
 - Write ONLY the post content, nothing else
 - Do NOT include meta-commentary like "Here's a post..." or "This post..."
-- Stay within the {char_limit} character limit
+- Stay within the character limit
 - Match the {tone} tone precisely
 - Follow {platform}'s best practices
 
@@ -102,8 +164,21 @@ Generate the post now:"""
         features: str,
         format_style: str,
         voice: str,
+        examples: list[str] = None,
     ) -> str:
         """Conversational prompt for Claude."""
+        examples_text = ""
+        if examples:
+            formatted = "\n\n".join(
+                [
+                    f"Example {i + 1}:\n{textwrap.dedent(ex).strip()}"
+                    for i, ex in enumerate(examples)
+                ]
+            )
+            examples_text = (
+                f"\n\nHere are some examples of the style I want:\n{formatted}"
+            )
+
         return f"""Hey! I need your help creating a great {platform.upper()} post.
 
 Here's what I'm thinking about:
@@ -112,9 +187,9 @@ Here's what I'm thinking about:
 Can you write this in a {tone} way? I want it to feel {voice.lower()}
 
 A few things to keep in mind:
-- Keep it under {char_limit} characters
+- {char_limit}
 - {features}
-- {format_style}
+- {format_style}{examples_text}
 
 Just write the post itself - no explanations or commentary needed. Make it authentic and engaging for {platform}!"""
 
@@ -127,17 +202,28 @@ Just write the post itself - no explanations or commentary needed. Make it authe
         features: str,
         format_style: str,
         voice: str,
+        examples: list[str] = None,
     ) -> str:
         """Punchy, direct prompt for Grok."""
+        examples_text = ""
+        if examples:
+            formatted = "\n\n".join(
+                [
+                    f"Ex {i + 1}:\n{textwrap.dedent(ex).strip()}"
+                    for i, ex in enumerate(examples)
+                ]
+            )
+            examples_text = f"\n\nStyle Examples:\n{formatted}"
+
         return f"""Create a {platform.upper()} post. {tone.capitalize()} tone.
 
 Idea: {idea}
 
 Rules:
-- Max {char_limit} chars
+- {char_limit}
 - {features}
 - {format_style}
-- Style: {voice}
+- Style: {voice}{examples_text}
 
 Just the post. No fluff. Go:"""
 
@@ -150,8 +236,19 @@ Just the post. No fluff. Go:"""
         features: str,
         format_style: str,
         voice: str,
+        examples: list[str] = None,
     ) -> str:
         """Detailed prompt for Gemini (current implementation style)."""
+        examples_section = ""
+        if examples:
+            formatted = "\n\n".join(
+                [
+                    f"Example {i + 1}:\n{textwrap.dedent(ex).strip()}"
+                    for i, ex in enumerate(examples)
+                ]
+            )
+            examples_section = f"\n\nREFERENCE EXAMPLES:\n{formatted}"
+
         return f"""Create a social media post for {platform.upper()} based on the following:
 
 CONTENT IDEA: {idea}
@@ -162,7 +259,7 @@ PLATFORM REQUIREMENTS FOR {platform.upper()}:
 - Character limit: {char_limit}
 - Tone: {tone}
 - Features: {features}
-- Format: {format_style}
+- Format: {format_style}{examples_section}
 
 INSTRUCTIONS:
 1. Write ONLY the post content, nothing else
