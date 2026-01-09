@@ -170,6 +170,36 @@ async def delete_content(content_id: int, db: Session = Depends(get_db)):
     return {"message": "Content deleted successfully", "id": content_id}
 
 
+class ContentUpdateRequest(BaseModel):
+    """Request model for updating content text."""
+
+    content_text: str
+
+
+@app.put("/content/{content_id}", response_model=GeneratedContentResponse)
+async def update_content(
+    content_id: int, request: ContentUpdateRequest, db: Session = Depends(get_db)
+):
+    """
+    Update the text of a saved content item.
+
+    - **content_id**: The ID of the content to update
+    - **content_text**: The new content text
+    """
+    content = (
+        db.query(GeneratedContent).filter(GeneratedContent.id == content_id).first()
+    )
+    if not content:
+        raise HTTPException(status_code=404, detail="Content not found")
+
+    content.content_text = request.content_text
+    content.char_count = len(request.content_text)
+    db.commit()
+    db.refresh(content)
+
+    return content
+
+
 @app.get("/content", response_model=List[GeneratedContentResponse])
 async def get_all_content(db: Session = Depends(get_db)):
     """

@@ -1,5 +1,5 @@
-import { Search } from 'lucide-react';
-import type { Platform, ContentFilters } from '../types/content';
+import { Search, Calendar } from 'lucide-react';
+import type { Platform, DateRange, ContentFilters } from '../types/content';
 
 const PLATFORMS: { value: Platform | 'all'; label: string }[] = [
     { value: 'all', label: 'All Platforms' },
@@ -7,6 +7,16 @@ const PLATFORMS: { value: Platform | 'all'; label: string }[] = [
     { value: 'twitter', label: 'Twitter' },
     { value: 'reddit', label: 'Reddit' },
     { value: 'instagram', label: 'Instagram' },
+    { value: 'facebook', label: 'Facebook' },
+    { value: 'tiktok', label: 'TikTok' },
+];
+
+const DATE_RANGES: { value: DateRange; label: string }[] = [
+    { value: 'all', label: 'All Time' },
+    { value: 'today', label: 'Today' },
+    { value: 'week', label: 'Last 7 days' },
+    { value: 'month', label: 'Last 30 days' },
+    { value: 'quarter', label: 'Last 3 months' },
 ];
 
 interface HistoryFiltersProps {
@@ -41,6 +51,22 @@ export function HistoryFilters({ filters, onFiltersChange }: HistoryFiltersProps
                     </option>
                 ))}
             </select>
+
+            {/* Date Range Filter */}
+            <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                <select
+                    value={filters.dateRange || 'all'}
+                    onChange={(e) => onFiltersChange({ ...filters, dateRange: e.target.value as DateRange })}
+                    className="pl-10 pr-4 py-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all cursor-pointer appearance-none"
+                >
+                    {DATE_RANGES.map((d) => (
+                        <option key={d.value} value={d.value}>
+                            {d.label}
+                        </option>
+                    ))}
+                </select>
+            </div>
         </div>
     );
 }

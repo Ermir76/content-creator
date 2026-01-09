@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Copy, Check, AlertCircle, RefreshCw, Cpu, ChevronDown, ChevronUp, Save, CheckCircle } from 'lucide-react';
+import { Copy, Check, AlertCircle, RefreshCw, Cpu, Eye, Save, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { ContentModal } from './ContentModal';
 
 interface GeneratedContentCardProps {
   platform: string;
@@ -12,9 +13,8 @@ interface GeneratedContentCardProps {
   modelUsed?: string;
   error?: string;
   errorCode?: string;
-  ideaPrompt?: string; // Added for save functionality
   onRetry?: () => void;
-  onSave?: () => Promise<void>; // Added for save functionality
+  onSave?: () => Promise<void>;
 }
 
 const PLATFORM_COLORS: Record<string, string> = {
@@ -70,9 +70,9 @@ export function GeneratedContentCard({
   onSave
 }: GeneratedContentCardProps) {
   const [copied, setCopied] = useState(false);
-  const [expanded, setExpanded] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
 
   const handleCopy = async () => {
     if (!content) return;
@@ -115,6 +115,11 @@ export function GeneratedContentCard({
   const modelLabel = modelUsed ? (MODEL_LABELS[modelUsed.toLowerCase()] || modelUsed) : null;
   const modelColor = modelUsed ? (MODEL_COLORS[modelUsed.toLowerCase()] || 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300') : '';
   const errorMessage = errorCode ? (ERROR_MESSAGES[errorCode] || error) : error;
+
+  // Truncate content for preview
+  const previewText = content && content.length > 200
+    ? content.substring(0, 200) + '...'
+    : content;
 
   // Error Card View
   if (!success) {
@@ -163,111 +168,119 @@ export function GeneratedContentCard({
 
   // Success Card View
   return (
-    <Card className={`card-hover bg-white dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 overflow-hidden ${saved ? 'ring-2 ring-green-500/50' : ''}`}>
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Badge className={`${platformColor} text-white shadow-sm transition-transform hover:scale-105`}>
-              {platformLabel}
-            </Badge>
-            {saved && (
-              <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 border-green-200 dark:border-green-700">
-                <CheckCircle className="w-3 h-3 mr-1" />
-                Saved
+    <>
+      <Card className={`card-hover bg-white dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 overflow-hidden ${saved ? 'ring-2 ring-green-500/50' : ''}`}>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Badge className={`${platformColor} text-white shadow-sm transition-transform hover:scale-105`}>
+                {platformLabel}
+              </Badge>
+              {saved && (
+                <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 border-green-200 dark:border-green-700">
+                  <CheckCircle className="w-3 h-3 mr-1" />
+                  Saved
+                </Badge>
+              )}
+            </div>
+            {modelUsed && (
+              <Badge variant="outline" className={`${modelColor} text-xs`}>
+                <Cpu className="w-3 h-3 mr-1" />
+                {modelLabel}
               </Badge>
             )}
           </div>
-          {modelUsed && (
-            <Badge variant="outline" className={`${modelColor} text-xs`}>
-              <Cpu className="w-3 h-3 mr-1" />
-              {modelLabel}
-            </Badge>
-          )}
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <div className={`bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700/50 ${expanded ? '' : 'card-scroll'}`}>
-          <p className="text-sm whitespace-pre-wrap leading-relaxed text-slate-700 dark:text-slate-200">
-            {content}
-          </p>
-        </div>
-
-        {content && (
-          <div className="text-xs text-slate-400 dark:text-slate-500 text-right">
-            {content.length} characters
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {/* Content Preview - Clickable to open modal */}
+          <div
+            onClick={() => setModalOpen(true)}
+            className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700/50 cursor-pointer hover:border-blue-300 dark:hover:border-blue-600 transition-colors"
+          >
+            <p className="text-sm whitespace-pre-wrap leading-relaxed text-slate-700 dark:text-slate-200 line-clamp-4">
+              {previewText}
+            </p>
           </div>
-        )}
 
-        {/* Action Buttons */}
-        <div className="flex gap-2">
-          <Button
-            onClick={() => setExpanded(!expanded)}
-            variant="ghost"
-            size="sm"
-            className="flex-1 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50"
-          >
-            {expanded ? (
-              <>
-                <ChevronUp className="mr-1 h-4 w-4" />
-                Collapse
-              </>
-            ) : (
-              <>
-                <ChevronDown className="mr-1 h-4 w-4" />
-                Expand
-              </>
-            )}
-          </Button>
-          <Button
-            onClick={handleCopy}
-            variant="outline"
-            size="sm"
-            className={`flex-1 transition-all ${copied ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700 text-green-600 dark:text-green-400' : ''}`}
-            disabled={copied}
-          >
-            {copied ? (
-              <>
-                <Check className="mr-1 h-4 w-4" />
-                Copied!
-              </>
-            ) : (
-              <>
-                <Copy className="mr-1 h-4 w-4" />
-                Copy
-              </>
-            )}
-          </Button>
-          {onSave && (
+          {/* Character count */}
+          {content && (
+            <div className="text-xs text-slate-400 dark:text-slate-500 text-right">
+              {content.length} characters
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex gap-2">
             <Button
-              onClick={handleSave}
+              onClick={() => setModalOpen(true)}
               variant="outline"
               size="sm"
-              className={`flex-1 transition-all ${saved
-                  ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700 text-green-600 dark:text-green-400'
-                  : 'border-blue-300 dark:border-blue-600 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20'
-                }`}
-              disabled={saved || saving}
+              className="flex-1 border-purple-300 dark:border-purple-600 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20"
             >
-              {saved ? (
+              <Eye className="mr-1 h-4 w-4" />
+              View
+            </Button>
+            <Button
+              onClick={handleCopy}
+              variant="outline"
+              size="sm"
+              className={`flex-1 transition-all ${copied ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700 text-green-600 dark:text-green-400' : 'border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/30'}`}
+              disabled={copied}
+            >
+              {copied ? (
                 <>
-                  <CheckCircle className="mr-1 h-4 w-4" />
-                  Saved
-                </>
-              ) : saving ? (
-                <>
-                  <Save className="mr-1 h-4 w-4 animate-pulse" />
-                  Saving...
+                  <Check className="mr-1 h-4 w-4" />
+                  Copied!
                 </>
               ) : (
                 <>
-                  <Save className="mr-1 h-4 w-4" />
-                  Save
+                  <Copy className="mr-1 h-4 w-4" />
+                  Copy
                 </>
               )}
             </Button>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+            {onSave && (
+              <Button
+                onClick={handleSave}
+                variant="outline"
+                size="sm"
+                className={`flex-1 transition-all ${saved
+                    ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700 text-green-600 dark:text-green-400'
+                    : 'border-green-400 dark:border-green-600 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20'
+                  }`}
+                disabled={saved || saving}
+              >
+                {saved ? (
+                  <>
+                    <CheckCircle className="mr-1 h-4 w-4" />
+                    Saved
+                  </>
+                ) : saving ? (
+                  <>
+                    <Save className="mr-1 h-4 w-4 animate-pulse" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-1 h-4 w-4" />
+                    Save
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Modal - View only for generated content (not saved yet) */}
+      <ContentModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        platform={platform}
+        content={content || ''}
+        modelUsed={modelUsed}
+        canEdit={false}
+      />
+    </>
   );
 }

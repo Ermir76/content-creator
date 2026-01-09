@@ -39,8 +39,28 @@ export function HistoryView() {
         setItems(prev => prev.filter(item => item.id !== id));
     }, []);
 
-    // Filter items based on search and platform
+    // Helper function to get date cutoff for filtering
+    const getDateRangeCutoff = (range: string | undefined): Date | null => {
+        if (!range || range === 'all') return null;
+        const now = new Date();
+        switch (range) {
+            case 'today':
+                return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            case 'week':
+                return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            case 'month':
+                return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            case 'quarter':
+                return new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+            default:
+                return null;
+        }
+    };
+
+    // Filter items based on search, platform, and date range
     const filteredItems = useMemo(() => {
+        const dateCutoff = getDateRangeCutoff(filters.dateRange);
+
         return items.filter((item) => {
             // Platform filter
             if (filters.platform && filters.platform !== 'all') {
@@ -55,6 +75,14 @@ export function HistoryView() {
                 const matchesContent = item.content_text.toLowerCase().includes(query);
                 const matchesPrompt = item.idea_prompt.toLowerCase().includes(query);
                 if (!matchesContent && !matchesPrompt) {
+                    return false;
+                }
+            }
+
+            // Date range filter
+            if (dateCutoff) {
+                const itemDate = new Date(item.created_at);
+                if (itemDate < dateCutoff) {
                     return false;
                 }
             }
