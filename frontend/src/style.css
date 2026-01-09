@@ -53,7 +53,63 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+}
+
+@layer utilities {
+
+  /* Smooth theme transitions for all elements */
+  .theme-transition {
+    transition: background-color 0.3s ease,
+      border-color 0.3s ease,
+      color 0.3s ease,
+      box-shadow 0.3s ease;
+  }
+
+  /* Custom scrollbar for content cards */
+  .card-scroll {
+    max-height: 350px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(148, 163, 184, 0.5) transparent;
+  }
+
+  .card-scroll::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .card-scroll::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 3px;
+  }
+
+  .card-scroll::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.5);
+    border-radius: 3px;
+  }
+
+  .card-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.7);
+  }
+
+  .dark .card-scroll {
+    scrollbar-color: rgba(100, 116, 139, 0.5) transparent;
+  }
+
+  .dark .card-scroll::-webkit-scrollbar-thumb {
+    background: rgba(100, 116, 139, 0.5);
+  }
+
+  .dark .card-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(100, 116, 139, 0.7);
+  }
+
+  /* Card hover effects */
+  .card-hover {
+    @apply hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300;
   }
 }
