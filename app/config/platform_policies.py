@@ -6,9 +6,72 @@ from typing import Dict, Any
 PLATFORM_POLICIES: Dict[str, Dict[str, Any]] = {
     "linkedin": {
         "char_limit": 3000,
-        "tone": "professional and thought-provoking",
-        "features": "Use line breaks for readability, include relevant hashtags (3-5), and encourage engagement",
-        "format": "Start with a hook, provide value, end with a call-to-action",
+        "target_chars": 700,
+        "tone": "direct, human, reflective",
+        "voice_profile": "first-person, direct, honest, no-corporate-tone",
+        "features": (
+            "Short paragraphs (1–2 lines), no links, NO emojis as bullet points (use dashes), "
+            "no emojis in first line, include 2-3 broad hashtags at the very end (e.g., #Python #Coding)"
+        ),
+        "format": (
+            "Punchy hook (focus on pain/insight/result, NO technical jargon, < 140 chars), "
+            "honest experience (show struggle, not just success), leave room for insight, "
+            "end with exactly ONE open question (NO filler phrases like 'Comments welcome')"
+        ),
+        "examples": [
+            """
+            I used to think cleverness was the goal.
+
+            I spent 3 days writing a complex "performance" algorithm, only to realize later that a simple for-loop was actually faster for our data size.
+
+            It was humbling. I was over-engineering because it felt like "real work."
+            But real work is shipping something that works.
+
+            - Complicated code breaks.
+            - Simple code ships.
+
+            I still catch myself trying to be too clever.
+
+            Does anyone else struggle to keep it simple?
+
+            #SoftwareEngineering #Coding
+            """,
+            """
+            The hardest part of coding isn't the code.
+
+            It's knowing WHAT to build.
+
+            We shipped a fully functional feature last month. Perfect test coverage. Clean architecture. 
+            
+            Zero users.
+
+            It was a painful lesson. We built what we *thought* they needed, not what they actually asked for.
+
+            Now, I try to talk to users before I open VS Code. But it's hard to slow down.
+
+            How do you validate your ideas before building?
+
+            #ProductManagement #Startups
+            """,
+            """
+            Hook: I just spent 15 minutes trimming "concise" code.
+
+            Today, Claude Code decided that a 10-line request deserved a 100-line response—complete with repeated blocks and a 3-paragraph essay I didn't ask for. It was a frustrating reminder: AI that talks too much isn’t a feature; it’s a productivity tax.
+
+            The Lesson: We expect AI to speed up the loop, but without strict guardrails, it just adds "editing" to our Trello boards.
+
+            What I changed to regain control:
+
+            - Hard Constraints: I stopped saying "be brief" and started saying "Output: Code Only. Max 20 lines."
+            - Format Forced: I now specify the exact file structure before it starts typing.
+
+            AI is a reflection of the constraints you set. If your prompt is loose, your output will be noisy.
+
+            How are you handling "AI Yapping" in your workflow?
+
+            #AI #Productivity
+            """,
+        ],
         "primary_model": "openai",
         "fallback_model": "gemini",
     },
