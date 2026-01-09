@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Copy, Check, ChevronDown, ChevronUp, Cpu, Calendar, Trash2 } from 'lucide-react';
+import { Copy, Check, Eye, Cpu, Calendar, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { ContentModal } from './ContentModal';
+import { contentApi } from '../services/contentApi';
 import type { ContentHistoryItem } from '../types/content';
 
 const PLATFORM_COLORS: Record<string, string> = {
@@ -41,12 +43,14 @@ const MODEL_COLORS: Record<string, string> = {
 interface HistoryCardProps {
     item: ContentHistoryItem;
     onDelete?: (id: number) => Promise<void>;
+    onUpdate?: (id: number, newContent: string) => void;
 }
 
-export function HistoryCard({ item, onDelete }: HistoryCardProps) {
+export function HistoryCard({ item, onDelete, onUpdate }: HistoryCardProps) {
     const [copied, setCopied] = useState(false);
-    const [expanded, setExpanded] = useState(false);
     const [deleting, setDeleting] = useState(false);
+    const [modalOpen, setModalOpen] = useState(false);
+    const [currentContent, setCurrentContent] = useState(item.content_text);
 
     const platformColor = PLATFORM_COLORS[item.platform.toLowerCase()] || 'bg-gray-600';
     const platformLabel = PLATFORM_LABELS[item.platform.toLowerCase()] || item.platform;
@@ -55,7 +59,7 @@ export function HistoryCard({ item, onDelete }: HistoryCardProps) {
 
     const handleCopy = async () => {
         try {
-            await navigator.clipboard.writeText(item.content_text);
+            await navigator.clipboard.writeText(currentContent);
             setCopied(true);
             toast.success('Copied to clipboard!', {
                 description: `${platformLabel} content is ready to paste`
@@ -70,7 +74,6 @@ export function HistoryCard({ item, onDelete }: HistoryCardProps) {
     const handleDelete = async () => {
         if (!onDelete || deleting) return;
 
-        // Confirmation toast
         toast('Delete this content?', {
             description: `This will permanently remove the ${platformLabel} content.`,
             action: {
@@ -99,6 +102,12 @@ export function HistoryCard({ item, onDelete }: HistoryCardProps) {
         });
     };
 
+    const handleSaveEdit = async (newContent: string) => {
+        await contentApi.updateContent(item.id, newContent);
+        setCurrentContent(newContent);
+        onUpdate?.(item.id, newContent);
+    };
+
     const formatDate = (dateString: string) => {
         const date = new Date(dateString);
         return date.toLocaleDateString('en-US', {
@@ -109,96 +118,112 @@ export function HistoryCard({ item, onDelete }: HistoryCardProps) {
         });
     };
 
+    // Truncate content for preview
+    const previewText = currentContent.length > 200
+        ? currentContent.substring(0, 200) + '...'
+        : currentContent;
+
     return (
-        <Card className="card-hover bg-white dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 overflow-hidden">
-            <CardHeader className="pb-2 space-y-2">
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                    <div className="flex items-center gap-2">
-                        <Badge className={`${platformColor} text-white shadow-sm`}>
-                            {platformLabel}
-                        </Badge>
-                        {modelLabel && (
-                            <Badge variant="outline" className={`${modelColor} text-xs`}>
-                                <Cpu className="w-3 h-3 mr-1" />
-                                {modelLabel}
+        <>
+            <Card className="card-hover bg-white dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 overflow-hidden">
+                <CardHeader className="pb-2 space-y-2">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div className="flex items-center gap-2">
+                            <Badge className={`${platformColor} text-white shadow-sm`}>
+                                {platformLabel}
                             </Badge>
-                        )}
+                            {modelLabel && (
+                                <Badge variant="outline" className={`${modelColor} text-xs`}>
+                                    <Cpu className="w-3 h-3 mr-1" />
+                                    {modelLabel}
+                                </Badge>
+                            )}
+                        </div>
+                        <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
+                            <Calendar className="w-3 h-3" />
+                            {formatDate(item.created_at)}
+                        </div>
                     </div>
-                    <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
-                        <Calendar className="w-3 h-3" />
-                        {formatDate(item.created_at)}
-                    </div>
-                </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 truncate italic">
-                    "{item.idea_prompt}"
-                </p>
-            </CardHeader>
-            <CardContent className="space-y-3">
-                <div className={`bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700/50 ${expanded ? '' : 'card-scroll'}`}>
-                    <p className="text-sm whitespace-pre-wrap leading-relaxed text-slate-700 dark:text-slate-200">
-                        {item.content_text}
+                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate italic">
+                        "{item.idea_prompt}"
                     </p>
-                </div>
-
-                {item.char_count && (
-                    <div className="text-xs text-slate-400 dark:text-slate-500 text-right">
-                        {item.char_count} characters
+                </CardHeader>
+                <CardContent className="space-y-3">
+                    {/* Content Preview - Clickable to open modal */}
+                    <div
+                        onClick={() => setModalOpen(true)}
+                        className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700/50 cursor-pointer hover:border-blue-300 dark:hover:border-blue-600 transition-colors"
+                    >
+                        <p className="text-sm whitespace-pre-wrap leading-relaxed text-slate-700 dark:text-slate-200 line-clamp-4">
+                            {previewText}
+                        </p>
                     </div>
-                )}
 
-                {/* Action Buttons */}
-                <div className="flex gap-2">
-                    <Button
-                        onClick={() => setExpanded(!expanded)}
-                        variant="ghost"
-                        size="sm"
-                        className="flex-1 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50"
-                    >
-                        {expanded ? (
-                            <>
-                                <ChevronUp className="mr-1 h-4 w-4" />
-                                Collapse
-                            </>
-                        ) : (
-                            <>
-                                <ChevronDown className="mr-1 h-4 w-4" />
-                                Expand
-                            </>
-                        )}
-                    </Button>
-                    <Button
-                        onClick={handleCopy}
-                        variant="outline"
-                        size="sm"
-                        className={`flex-1 transition-all ${copied ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700 text-green-600 dark:text-green-400' : ''}`}
-                        disabled={copied}
-                    >
-                        {copied ? (
-                            <>
-                                <Check className="mr-1 h-4 w-4" />
-                                Copied!
-                            </>
-                        ) : (
-                            <>
-                                <Copy className="mr-1 h-4 w-4" />
-                                Copy
-                            </>
-                        )}
-                    </Button>
-                    {onDelete && (
+                    {/* Character count */}
+                    <div className="text-xs text-slate-400 dark:text-slate-500 text-right">
+                        {currentContent.length} characters
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-2">
                         <Button
-                            onClick={handleDelete}
+                            onClick={() => setModalOpen(true)}
                             variant="outline"
                             size="sm"
-                            className="border-red-300 dark:border-red-600 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
-                            disabled={deleting}
+                            className="flex-1 border-purple-300 dark:border-purple-600 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20"
                         >
-                            <Trash2 className={`mr-1 h-4 w-4 ${deleting ? 'animate-pulse' : ''}`} />
-                            {deleting ? 'Deleting...' : 'Delete'}
+                            <Eye className="mr-1 h-4 w-4" />
+                            View
                         </Button>
-                    )}
-                </div>
-            </CardContent>
-        </Card>
+                        <Button
+                            onClick={handleCopy}
+                            variant="outline"
+                            size="sm"
+                            className={`flex-1 transition-all ${copied ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700 text-green-600 dark:text-green-400' : 'border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/30'}`}
+                            disabled={copied}
+                        >
+                            {copied ? (
+                                <>
+                                    <Check className="mr-1 h-4 w-4" />
+                                    Copied!
+                                </>
+                            ) : (
+                                <>
+                                    <Copy className="mr-1 h-4 w-4" />
+                                    Copy
+                                </>
+                            )}
+                        </Button>
+                        {onDelete && (
+                            <Button
+                                onClick={handleDelete}
+                                variant="outline"
+                                size="sm"
+                                className="border-red-300 dark:border-red-600 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                disabled={deleting}
+                            >
+                                <Trash2 className={`mr-1 h-4 w-4 ${deleting ? 'animate-pulse' : ''}`} />
+                                {deleting ? '...' : 'Delete'}
+                            </Button>
+                        )}
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Modal */}
+            <ContentModal
+                isOpen={modalOpen}
+                onClose={() => setModalOpen(false)}
+                platform={item.platform}
+                content={currentContent}
+                modelUsed={item.model_used}
+                createdAt={item.created_at}
+                ideaPrompt={item.idea_prompt}
+                contentId={item.id}
+                onSave={handleSaveEdit}
+                onContentUpdate={setCurrentContent}
+                canEdit={true}
+            />
+        </>
     );
 }

@@ -21,7 +21,12 @@ export interface ContentHistoryItem {
 /**
  * Supported platform types
  */
-export type Platform = 'linkedin' | 'twitter' | 'reddit' | 'instagram';
+export type Platform = 'linkedin' | 'twitter' | 'reddit' | 'instagram' | 'facebook' | 'tiktok';
+
+/**
+ * Date range filter options
+ */
+export type DateRange = 'all' | 'today' | 'week' | 'month' | 'quarter';
 
 /**
  * Filter options for content history
@@ -29,4 +34,5 @@ export type Platform = 'linkedin' | 'twitter' | 'reddit' | 'instagram';
 export interface ContentFilters {
     searchQuery?: string;
     platform?: Platform | 'all';
+    dateRange?: DateRange;
 }

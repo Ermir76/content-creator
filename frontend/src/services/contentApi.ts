@@ -40,4 +40,14 @@ export const contentApi = {
     async deleteContent(id: number): Promise<void> {
         await axios.delete(`${API_BASE_URL}/${id}`);
     },
+
+    /**
+     * Update the text of a saved content item
+     */
+    async updateContent(id: number, contentText: string): Promise<ContentHistoryItem> {
+        const response = await axios.put<ContentHistoryItem>(`${API_BASE_URL}/${id}`, {
+            content_text: contentText,
+        });
+        return response.data;
+    },
 };
