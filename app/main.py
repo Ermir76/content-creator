@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import List, Optional
 
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -19,7 +19,6 @@ from app.services.content_generator import (
 )
 
 load_dotenv()
-
 
 
 # Create all database tables
@@ -56,6 +55,16 @@ class ContentGenerateRequest(BaseModel):
     platforms: List[str]
 
 
+class ContentSaveRequest(BaseModel):
+    """Request model for saving generated content."""
+
+    idea_prompt: str
+    platform: str
+    content_text: str
+    model_used: Optional[str] = None
+    char_count: Optional[int] = None
+
+
 class GeneratedContentResponse(BaseModel):
     """Response model for database-stored content (GET endpoints)."""
 
@@ -84,6 +93,7 @@ async def generate_content(
     Generate platform-specific content using AI models.
 
     Uses multi-model architecture with automatic fallback and retry logic.
+    Content is NOT automatically saved - use POST /content/save to persist.
 
     - **idea_prompt**: The content idea or topic
     - **platforms**: List of platforms (e.g., ["linkedin", "twitter", "reddit", "instagram"])
@@ -93,51 +103,77 @@ async def generate_content(
     # MVP: Hardcoded voice profile
     voice_profile = "Professional, engaging, and authentic. Uses storytelling and practical examples."
 
-    # Ensure we have at least one user (for MVP, create a default user if none exists)
-    user = db.query(User).first()
-    if not user:
-        user = User(email="default@example.com", voice_profile=voice_profile)
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-
-    # Generate content using new orchestrator
+    # Generate content using orchestrator (no auto-save)
     generation_response = generate_multi_platform_content(
         idea=request.idea_prompt,
         platforms=request.platforms,
         voice_profile=voice_profile,
     )
 
-    # Save successful results to database with quality tracking
-    for result in generation_response.results:
-        if result.success and result.content:
-            content_record = GeneratedContent(
-                idea_prompt=request.idea_prompt,
-                platform=result.platform,
-                content_text=result.content,
-                status="ready_for_copy",
-                user_id=user.id,
-                model_used=result.model_used,
-                validation_passed=True,
-                char_count=result.char_count,
-                regeneration_count=0,  # TODO: track from retry logic
-            )
-            db.add(content_record)
-
-    try:
-        db.commit()
-    except Exception as e:
-        db.rollback()
-        # Still return the generation response, just log the DB error
-        print(f"Warning: Failed to save content to database: {e}")
-
     return generation_response
+
+
+@app.post("/content/save", response_model=GeneratedContentResponse)
+async def save_content(request: ContentSaveRequest, db: Session = Depends(get_db)):
+    """
+    Save a single piece of generated content to the database.
+
+    - **idea_prompt**: The original prompt used to generate content
+    - **platform**: The target platform (e.g., "linkedin", "twitter")
+    - **content_text**: The generated content text
+    - **model_used**: Optional, the AI model that generated this content
+    - **char_count**: Optional, character count of the content
+    """
+    # Ensure we have at least one user (for MVP, create a default user if none exists)
+    user = db.query(User).first()
+    if not user:
+        user = User(email="default@example.com", voice_profile="Default voice profile")
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
+    # Create content record
+    content_record = GeneratedContent(
+        idea_prompt=request.idea_prompt,
+        platform=request.platform,
+        content_text=request.content_text,
+        status="saved",
+        user_id=user.id,
+        model_used=request.model_used,
+        validation_passed=True,
+        char_count=request.char_count or len(request.content_text),
+        regeneration_count=0,
+    )
+    db.add(content_record)
+    db.commit()
+    db.refresh(content_record)
+
+    return content_record
+
+
+@app.delete("/content/{content_id}")
+async def delete_content(content_id: int, db: Session = Depends(get_db)):
+    """
+    Delete a saved content item by ID.
+
+    - **content_id**: The ID of the content to delete
+    """
+    content = (
+        db.query(GeneratedContent).filter(GeneratedContent.id == content_id).first()
+    )
+    if not content:
+        raise HTTPException(status_code=404, detail="Content not found")
+
+    db.delete(content)
+    db.commit()
+
+    return {"message": "Content deleted successfully", "id": content_id}
 
 
 @app.get("/content", response_model=List[GeneratedContentResponse])
 async def get_all_content(db: Session = Depends(get_db)):
     """
-    Retrieve all generated content from the database.
+    Retrieve all saved content from the database.
 
     Includes quality tracking fields: model_used, validation_passed, etc.
     """

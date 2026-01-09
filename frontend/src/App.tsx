@@ -6,6 +6,7 @@ import { HistoryView } from './components/HistoryView';
 import { ArrowUp, Loader2 } from 'lucide-react';
 import { Toaster, toast } from 'sonner';
 import axios from 'axios';
+import { contentApi } from './services/contentApi';
 
 // Updated interface to match PlatformResult from backend
 interface PlatformResult {
@@ -173,6 +174,15 @@ function App() {
                       error={result.error}
                       errorCode={result.error_code}
                       onRetry={() => handleRetryPlatform(result.platform)}
+                      onSave={result.success && result.content && lastRequest ? async () => {
+                        await contentApi.saveContent({
+                          idea_prompt: lastRequest.ideaPrompt,
+                          platform: result.platform,
+                          content_text: result.content!,
+                          model_used: result.model_used,
+                          char_count: result.char_count,
+                        });
+                      } : undefined}
                     />
                   </div>
                 ))}
