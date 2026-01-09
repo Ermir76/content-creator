@@ -1,6 +1,7 @@
 """Quality logging service for tracking content generation metrics."""
 
 from typing import Optional
+
 from sqlalchemy.orm import Session
 
 from app.models.models import GeneratedContent
@@ -41,10 +42,10 @@ class QualityLogger:
             char_count: Character count of the generated content
             regeneration_count: Number of retry attempts before success
         """
-        content_record.model_used = model_used
-        content_record.validation_passed = validation_passed
-        content_record.char_count = char_count
-        content_record.regeneration_count = regeneration_count
+        content_record.model_used = model_used  # type: ignore[attr-defined]
+        content_record.validation_passed = validation_passed # type: ignore[attr-defined]
+        content_record.char_count = char_count # type: ignore[attr-defined]
+        content_record.regeneration_count = regeneration_count # type: ignore[attr-defined]
 
         # Note: caller is responsible for committing the transaction
 

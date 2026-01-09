@@ -1,15 +1,14 @@
-from fastapi import FastAPI, Depends
-from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.orm import Session
-from pydantic import BaseModel
-from typing import List, Optional
 from datetime import datetime
-from dotenv import load_dotenv
+from typing import List, Optional
 
-load_dotenv()
+from dotenv import load_dotenv
+from fastapi import Depends, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from sqlalchemy.orm import Session
 
 from app.database import Base, engine, get_db
-from app.models.models import User, GeneratedContent
+from app.models.models import GeneratedContent, User
 from app.models.response_models import GenerationResponse
 from app.services.content_generator import (
     generate_content as generate_multi_platform_content,
@@ -18,6 +17,9 @@ from app.services.content_generator import (
     get_circuit_breaker_status,
     reset_circuit_breaker,
 )
+
+load_dotenv()
+
 
 
 # Create all database tables
@@ -156,7 +158,7 @@ async def get_model_status():
 
 
 @app.post("/circuit-breaker/reset/{model_name}")
-async def reset_model_circuit(model_name: str = None):
+async def reset_model_circuit(model_name: Optional[str] = None):
     """
     Reset circuit breaker for a specific model or all models.
 

@@ -1,5 +1,7 @@
 """Prompt adaptation for different AI models."""
 
+from typing import Optional
+
 from app.config.platform_policies import get_platform_policy
 
 
@@ -8,7 +10,7 @@ class PromptAdapter:
 
     @staticmethod
     def adapt_prompt(
-        idea: str, platform: str, model_name: str, voice_profile: str = None
+        idea: str, platform: str, model_name: str, voice_profile: Optional[str] = None
     ) -> str:
         """
         Create a model-specific prompt for content generation.
