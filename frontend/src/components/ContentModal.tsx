@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { X, Copy, Check, Save, Edit2, Cpu, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -50,8 +50,17 @@ const MODEL_COLORS: Record<string, string> = {
     xai: 'bg-slate-100 text-slate-700 dark:bg-slate-700/30 dark:text-slate-300 border-slate-200 dark:border-slate-600',
 };
 
-const WIDTH_STEPS = [450, 550, 672, 800];
-const MAX_HEIGHT_PERCENT = 0.80;
+// Deterministic sizing based on character count
+// This prevents layout thrashing and "crazy shapes"
+const getInitialWidth = (length: number, platform: string): number => {
+    // Twitter is always compact
+    if (platform.toLowerCase() === 'twitter') return 450;
+
+    if (length < 400) return 450;  // Short post -> Narrow
+    if (length < 1000) return 550; // Medium post -> Medium
+    if (length < 2000) return 672; // Long post -> Wide
+    return 800;                    // Very long post -> Max width
+};
 
 export function ContentModal({
     isOpen,
@@ -69,13 +78,10 @@ export function ContentModal({
     const [editedContent, setEditedContent] = useState(content);
     const [copied, setCopied] = useState(false);
     const [saving, setSaving] = useState(false);
-    const [dimensions, setDimensions] = useState<{ width: number; height: number } | null>(null);
-    const [lockedDimensions, setLockedDimensions] = useState<{ width: number; height: number } | null>(null);
-    const [measurementDone, setMeasurementDone] = useState(false);
 
-    const headerRef = useRef<HTMLDivElement>(null);
-    const footerRef = useRef<HTMLDivElement>(null);
-    const contentRef = useRef<HTMLDivElement>(null);
+    // State for locked dimensions during edit
+    const [lockedDimensions, setLockedDimensions] = useState<{ width: number; height: number } | null>(null);
+
     const modalRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -84,67 +90,26 @@ export function ContentModal({
     const modelLabel = modelUsed ? (MODEL_LABELS[modelUsed.toLowerCase()] || modelUsed) : null;
     const modelColor = modelUsed ? (MODEL_COLORS[modelUsed.toLowerCase()] || 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300') : '';
 
-    // Measure and calculate dimensions
-    useLayoutEffect(() => {
-        if (!isOpen || measurementDone || !modalRef.current || !headerRef.current || !footerRef.current || !contentRef.current) return;
+    // Get predictable width based on content length
+    const initialWidth = getInitialWidth(content.length, platform);
 
-        const maxHeight = window.innerHeight * MAX_HEIGHT_PERCENT;
-        const headerHeight = headerRef.current.offsetHeight;
-        const footerHeight = footerRef.current.offsetHeight;
-        const ideaPromptHeight = modalRef.current.querySelector('.idea-prompt')?.clientHeight || 0;
-
-        // Base static height (header + footer + prompt)
-        const chromeHeight = headerHeight + footerHeight + ideaPromptHeight;
-
-        // Try widths to find optimal fit
-        for (const width of WIDTH_STEPS) {
-            // Set width to test content wrapping
-            modalRef.current.style.width = `${width}px`;
-
-            // Get pure content height (natural height of text)
-            const contentScrollHeight = contentRef.current.scrollHeight;
-            const totalHeight = chromeHeight + contentScrollHeight;
-
-            // Check if this config fits within max height
-            // Or if it's the widest option (fallback)
-            if (totalHeight <= maxHeight || width === WIDTH_STEPS[WIDTH_STEPS.length - 1]) {
-                // Clamp height to max allowed
-                const finalHeight = Math.min(totalHeight, maxHeight);
-
-                setDimensions({ width, height: finalHeight });
-                setMeasurementDone(true);
-                break;
-            }
-        }
-    }, [isOpen, content, measurementDone]);
-
-    // Reset on open
+    // Reset state when modal opens
     useEffect(() => {
         if (isOpen) {
             setEditedContent(content);
             setIsEditing(false);
-            setDimensions(null);
             setLockedDimensions(null);
-            setMeasurementDone(false);
         }
     }, [isOpen, content]);
 
-    // Handle auto-focus
-    useEffect(() => {
-        if (isEditing && textareaRef.current) {
-            textareaRef.current.focus();
-            textareaRef.current.setSelectionRange(editedContent.length, editedContent.length);
-        }
-    }, [isEditing]);
-
-    // Keyboard shortcuts
+    // Handle escape key
     useEffect(() => {
         const handleEscape = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
                 if (isEditing) {
                     setIsEditing(false);
                     setEditedContent(content);
-                    setLockedDimensions(null); // Unlock dimensions on escape during edit
+                    setLockedDimensions(null);
                 } else {
                     onClose();
                 }
@@ -160,9 +125,18 @@ export function ContentModal({
         };
     }, [isOpen, isEditing, content, onClose]);
 
+    // Focus textarea when editing starts
+    useEffect(() => {
+        if (isEditing && textareaRef.current) {
+            textareaRef.current.focus();
+            textareaRef.current.setSelectionRange(editedContent.length, editedContent.length);
+        }
+    }, [isEditing]);
+
     const handleStartEdit = () => {
         if (modalRef.current) {
-            // Capture current exact dimensions before rendering textarea
+            // CRITICAL: Capture the EXACT current pixel dimensions before switching to edit mode.
+            // This ensures the modal freezes physically in place and doesn't shrink/grow/jump.
             const rect = modalRef.current.getBoundingClientRect();
             setLockedDimensions({
                 width: rect.width,
@@ -170,6 +144,28 @@ export function ContentModal({
             });
         }
         setIsEditing(true);
+    };
+
+    const handleCancelEdit = () => {
+        setEditedContent(content);
+        setIsEditing(false);
+        setLockedDimensions(null); // Release the lock
+    };
+
+    const handleSaveEdit = async () => {
+        if (!onSave) return;
+        setSaving(true);
+        try {
+            await onSave(editedContent);
+            onContentUpdate?.(editedContent);
+            setIsEditing(false);
+            setLockedDimensions(null); // Release the lock
+            toast.success('Content saved!');
+        } catch (err) {
+            toast.error('Failed to save changes');
+        } finally {
+            setSaving(false);
+        }
     };
 
     const handleCopy = async () => {
@@ -181,28 +177,6 @@ export function ContentModal({
         } catch (err) {
             toast.error('Failed to copy');
         }
-    };
-
-    const handleSaveEdit = async () => {
-        if (!onSave) return;
-        setSaving(true);
-        try {
-            await onSave(editedContent);
-            onContentUpdate?.(editedContent);
-            setIsEditing(false);
-            setLockedDimensions(null); // Unlock after save
-            toast.success('Content saved!');
-        } catch (err) {
-            toast.error('Failed to save changes');
-        } finally {
-            setSaving(false);
-        }
-    };
-
-    const handleCancelEdit = () => {
-        setEditedContent(content);
-        setIsEditing(false);
-        setLockedDimensions(null); // Unlock after cancel
     };
 
     const formatDate = (dateString: string) => {
@@ -218,23 +192,20 @@ export function ContentModal({
 
     if (!isOpen) return null;
 
-    // Apply dimensions if calculated, else start with smallest width
-    // Use inline style for width/height to ensure they are locked
+    // Determine styles
+    // If editing, use the LOCKED pixel dimensions.
+    // If viewing, use the PREDICTABLE initial width and auto height.
     const modalStyle: React.CSSProperties = lockedDimensions
         ? {
             width: `${lockedDimensions.width}px`,
             height: `${lockedDimensions.height}px`,
-            transition: 'none' // Disable transition when locked to prevent animation
+            transition: 'none' // No animation during edit to feel solid
         }
-        : dimensions
-            ? {
-                width: `${dimensions.width}px`,
-                height: `${dimensions.height}px`,
-                transition: 'width 300ms ease-out, height 300ms ease-out'
-            }
-            : {
-                width: `${WIDTH_STEPS[0]}px`
-            };
+        : {
+            width: `${initialWidth}px`,
+            maxHeight: '85vh', // Allow natural scrolling up to 85% view height
+            transition: 'width 200ms ease-out'
+        };
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -244,13 +215,14 @@ export function ContentModal({
                     if (!isEditing) onClose();
                 }}
             />
+
             <div
                 ref={modalRef}
                 style={modalStyle}
                 className="relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col"
             >
                 {/* Header */}
-                <div ref={headerRef} className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700 flex-shrink-0">
+                <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700 flex-shrink-0">
                     <div className="flex items-center gap-3 flex-wrap">
                         <Badge className={`${platformColor} text-white shadow-sm`}>
                             {platformLabel}
@@ -278,9 +250,9 @@ export function ContentModal({
                     </Button>
                 </div>
 
-                {/* Idea Prompt - if exists */}
+                {/* Idea Prompt */}
                 {ideaPrompt && (
-                    <div className="idea-prompt px-4 py-2 bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700 flex-shrink-0">
+                    <div className="px-4 py-2 bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700 flex-shrink-0">
                         <p className="text-xs text-slate-500 dark:text-slate-400 italic truncate">
                             Prompt: "{ideaPrompt}"
                         </p>
@@ -288,18 +260,16 @@ export function ContentModal({
                 )}
 
                 {/* Content Area */}
-                <div
-                    ref={contentRef}
-                    className="p-4 overflow-y-auto flex-1 h-full min-h-0"
-                >
+                <div className="p-4 overflow-y-auto flex-1 min-h-0">
                     {isEditing ? (
                         <textarea
                             ref={textareaRef}
                             value={editedContent}
                             onChange={(e) => setEditedContent(e.target.value)}
-                            className="w-full h-full p-4 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm leading-relaxed resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent block"
+                            // h-full and w-full to fill the LOCKED container
+                            className="w-full h-full p-4 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm leading-relaxed resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent block box-border"
                             placeholder="Edit your content..."
-                            style={{ minHeight: '100%', boxSizing: 'border-box' }}
+                            style={{ minHeight: '100%' }}
                         />
                     ) : (
                         <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 min-h-full">
@@ -311,7 +281,7 @@ export function ContentModal({
                 </div>
 
                 {/* Footer */}
-                <div ref={footerRef} className="p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/30 flex-shrink-0">
+                <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/30 flex-shrink-0">
                     <div className="flex items-center justify-between">
                         <span className="text-xs text-slate-500 dark:text-slate-400">
                             {(isEditing ? editedContent : content).length} characters
