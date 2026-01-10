@@ -2,7 +2,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app.database import get_db
+from app.api.dependencies import get_db
 from app.models.response_models import GenerationResponse
 from app.models.schemas import (
     ContentGenerateRequest,

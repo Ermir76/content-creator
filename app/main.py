@@ -8,7 +8,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from app.database import Base, engine, get_db
+from app.core.database import Base, engine
+from app.api.dependencies import get_db
 from app.models.models import GeneratedContent, User
 from app.models.response_models import GenerationResponse
 from app.services.content import (

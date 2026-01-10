@@ -38,7 +38,7 @@ def build_weighted_list(weights: Dict[str, float]) -> list[str]:
 def load_config(config_path: str = None) -> Dict[str, Any]:
     """Load the YAML config file."""
     if config_path is None:
-        config_path = Path(__file__).parent.parent / "config" / "config.yaml"
+        config_path = Path(__file__).parent / "config.yaml"
 
     with open(config_path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f)
