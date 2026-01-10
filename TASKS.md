@@ -6,20 +6,20 @@
 - [x] Fix target_chars in Challenger prompt (700 char target, not 3000)
 - [x] Fix target_chars in Synthesizer prompt (700 char target, not 3000)
 
-## Phase 2: UI Customization Controls
-- [ ] Add policy controls section in frontend
-- [ ] Target length slider (500-1500 chars)
-- [ ] Tone selector (radio buttons: Professional, Casual, Direct, Storytelling)
-- [ ] Features checkboxes (hashtags, emojis, questions, short paragraphs)
-- [ ] Voice profile text input (optional, with placeholder)
-- [ ] Hook style dropdown (Question, Bold statement, Story, Fact, Anti-pattern)
-- [ ] CTA strength selector (None, Soft, Medium, Strong)
+## Phase 2: UI Customization Controls (COMPLETED ✓)
+- [x] Add policy controls section in frontend
+- [x] Target length slider (500-1500 chars)
+- [x] Tone selector (radio buttons: Professional, Casual, Direct, Storytelling)
+- [x] Features checkboxes (hashtags, emojis, questions, short paragraphs)
+- [x] Voice profile text input (optional, with placeholder)
+- [x] Hook style dropdown (Question, Bold statement, Story, Fact, Anti-pattern)
+- [x] CTA strength selector (None, Soft, Medium, Strong)
 
-## Phase 3: Backend Policy Override
-- [ ] Update API endpoint to accept custom policy parameters
-- [ ] Merge custom policies with default platform policies
-- [ ] Pass custom policies to AgenticFlow
-- [ ] Validate policy parameters server-side
+## Phase 3: Backend Policy Override (COMPLETED ✓)
+- [x] Update API endpoint to accept custom policy parameters
+- [x] Merge custom policies with default platform policies
+- [x] Pass custom policies to AgenticFlow
+- [x] Validate policy parameters server-side
 
 ## Phase 4: Settings Persistence
 - [ ] Save last-used settings to localStorage

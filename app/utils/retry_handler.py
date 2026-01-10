@@ -28,11 +28,17 @@ class RetryHandler:
             return True, 5  # Wait 5 seconds
 
         # Network errors - retry quickly
-        if any(keyword in error_str for keyword in ["network", "connection", "unreachable", "503", "502"]):
+        if any(
+            keyword in error_str
+            for keyword in ["network", "connection", "unreachable", "503", "502"]
+        ):
             return True, 3  # Wait 3 seconds
 
         # Authentication errors - don't retry (won't fix itself)
-        if any(keyword in error_str for keyword in ["api key", "authentication", "unauthorized", "401", "403"]):
+        if any(
+            keyword in error_str
+            for keyword in ["api key", "authentication", "unauthorized", "401", "403"]
+        ):
             return False, 0  # Don't retry
 
         # Server errors - retry with moderate wait
