@@ -21,7 +21,7 @@ from app.services.pipeline.generator import generate
 from app.services.pipeline.critic import critique
 from app.services.pipeline.improver import improve
 from app.services.pipeline.judge import judge, JudgeResult
-from app.utils.output_validator import OutputValidator
+from app.utils.validation import OutputValidator
 
 
 load_dotenv()  # Load API keys from .env

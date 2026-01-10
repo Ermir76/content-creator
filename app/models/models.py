@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
 
-from app.database import Base
+from app.core.database import Base
 
 
 class User(Base):
@@ -28,13 +28,19 @@ class GeneratedContent(Base):
     platform = Column(String, nullable=False)  # e.g., "linkedin", "reddit", "twitter"
     content_text = Column(Text, nullable=False)
     status = Column(String, default="ready_for_copy", nullable=False)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = Column(
+        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
+    )
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    
+
     # Quality tracking columns (Phase 10)
     model_used = Column(String, nullable=True)  # Which AI model generated this content
-    validation_passed = Column(Boolean, default=True, nullable=True)  # Did output pass validation
-    regeneration_count = Column(Integer, default=0, nullable=True)  # How many retries needed
+    validation_passed = Column(
+        Boolean, default=True, nullable=True
+    )  # Did output pass validation
+    regeneration_count = Column(
+        Integer, default=0, nullable=True
+    )  # How many retries needed
     char_count = Column(Integer, nullable=True)  # Character count of generated content
 
     # Relationship to user
