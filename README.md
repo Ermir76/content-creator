@@ -172,30 +172,197 @@ content-creator/
 │   │   ├── models.py
 │   │   └── response_models.py
 │   ├── services/                 # Business logic
-│   │   ├── ai_provider.py       # Multi-AI provider abstraction
-│   │   ├── content_generator.py # Main orchestration service
-│   │   ├── circuit_breaker.py   # Failure detection
-│   │   ├── model_router.py      # Platform → model routing
-│   │   ├── prompt_adapter.py    # Model-specific prompts
-│   │   ├── output_validator.py  # Content validation
-│   │   ├── retry_handler.py     # Retry logic
-│   │   └── quality_logger.py    # Metrics logging
-│   └── main.py                   # FastAPI app entry point
+│   │   ├── ai_provider.py       # Sends requests to OpenAI/Gemini/Claude/Grok APIs
+│   │   ├── content_generator.py # Entry point: receives request, loops platforms, returns results
+│   │   ├── agentic_flow.py      # LinkedIn special: runs Drafter→Challenger→Synthesizer→Judge
+│   │   ├── circuit_breaker.py   # Tracks API failures, stops calling broken APIs
+│   │   ├── model_router.py      # Decides: LinkedIn=GPT, Twitter=Grok, etc.
+│   │   ├── prompt_adapter.py    # ⚠️ BUILDS THE TEXT sent to AI (edit to add hook_style, cta)
+│   │   ├── output_validator.py  # Checks if AI output is valid (not empty, within limits)
+│   │   ├── retry_handler.py     # If AI fails, wait and try again
+│   │   └── quality_logger.py    # Logs which AI was used, success/fail stats
+│   └── main.py                   # API routes: /content/generate, /content/save, etc.
 ├── alembic/                      # Database migrations
 ├── frontend/                     # React application
 │   ├── src/
 │   │   ├── components/
 │   │   │   ├── ui/              # Shadcn/UI components
 │   │   │   ├── Layout.tsx
-│   │   │   ├── ContentComposer.tsx
+│   │   │   ├── ContentComposer.tsx   # Input form + platform controls
+│   │   │   ├── PolicyControls.tsx    # Customization sliders/dropdowns
 │   │   │   └── GeneratedContentCard.tsx
-│   │   ├── App.tsx
+│   │   ├── types/
+│   │   │   └── policy.ts        # TypeScript types for settings
+│   │   ├── App.tsx              # Main app + API calls
 │   │   └── main.tsx
 │   └── package.json
 ├── .env                          # Environment variables (gitignored)
 ├── requirements.txt
 └── README.md
 ```
+
+---
+
+## 🔄 DATA FLOW: How Your Settings Travel Through The System
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              FRONTEND (React)                                │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│   ContentComposer.tsx                                                        │
+│   ├── User enters idea: "Create a post about burnout from LLM"              │
+│   ├── User selects platform: LinkedIn ✓                                      │
+│   ├── User clicks "Customize" and sets:                                      │
+│   │   ├── target_chars: 750                                                  │
+│   │   ├── tone: "Storytelling"                                               │
+│   │   ├── features: [hashtags, questions, short_paragraphs]                  │
+│   │   ├── hook_style: "Anti-pattern"                                         │
+│   │   ├── cta_strength: "Soft"                                               │
+│   │   └── voice_profile: "humble"                                            │
+│   │                                                                          │
+│   └── Calls: onGenerate(idea, platforms, platformPolicies)                   │
+│                         │                                                    │
+└─────────────────────────│────────────────────────────────────────────────────┘
+                          │
+                          ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│   App.tsx                                                                    │
+│   ├── handleGenerate() receives the data                                     │
+│   └── Sends HTTP POST to /content/generate with:                             │
+│       {                                                                      │
+│         idea_prompt: "Create a post about burnout from LLM",                 │
+│         platforms: ["linkedin"],                                             │
+│         platform_policies: {                                                 │
+│           "linkedin": { target_chars: 750, tone: "Storytelling", ... }       │
+│         }                                                                    │
+│       }                                                                      │
+└─────────────────────────│────────────────────────────────────────────────────┘
+                          │
+                          ▼ HTTP POST
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              BACKEND (FastAPI)                               │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│   app/main.py                                                                │
+│   ├── Receives request at /content/generate                                  │
+│   ├── Validates policy values (target_chars 500-1500, valid tones, etc.)     │
+│   └── Calls: generate_multi_platform_content(idea, platforms, policies)      │
+│                         │                                                    │
+└─────────────────────────│────────────────────────────────────────────────────┘
+                          │
+                          ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│   app/services/content_generator.py                                          │
+│   ├── generate_content() - loops through each platform                       │
+│   ├── For each platform, extracts that platform's policy:                    │
+│   │   policy_override = platform_policies["linkedin"]                        │
+│   └── Calls: generate_for_platform(idea, "linkedin", policy_override)        │
+│                         │                                                    │
+│   ├── For LinkedIn: Uses AgenticFlow (4-step AI pipeline)                    │
+│   └── For others: Uses simple try_generate_with_retry                        │
+└─────────────────────────│────────────────────────────────────────────────────┘
+                          │
+                          ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│   app/services/agentic_flow.py                                               │
+│   ├── generate_flow() receives policy_override                               │
+│   ├── Gets default policy: get_platform_policy("linkedin")                   │
+│   ├── MERGES with user overrides: merge_policies(default, override)          │
+│   │   Result: { target_chars: 750, tone: "Storytelling", hook_style: ... }   │
+│   │                                                                          │
+│   └── Runs 4-step pipeline:                                                  │
+│       │                                                                      │
+│       ├── STEP 1: DRAFTER (GPT-5)                                            │
+│       │   └── Calls: PromptAdapter.adapt_prompt(idea, platform, policy)      │
+│       │                                                                      │
+│       ├── STEP 2: CHALLENGER (Gemini)                                        │
+│       │   └── Calls: PromptAdapter.challenger_prompt(draft, policy)          │
+│       │                                                                      │
+│       ├── STEP 3: SYNTHESIZER (GPT-5)                                        │
+│       │   └── Calls: PromptAdapter.synthesizer_prompt(drafts, policy)        │
+│       │                                                                      │
+│       └── STEP 4: JUDGE (Claude)                                             │
+│           └── Calls: PromptAdapter.judge_prompt(drafts)                      │
+└─────────────────────────│────────────────────────────────────────────────────┘
+                          │
+                          ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│   app/services/prompt_adapter.py   ⚠️ THE PROMPTS ARE HERE!                  │
+│   ├── adapt_prompt() - Creates the actual text sent to AI                    │
+│   │   └── Currently uses: char_limit, target_chars, tone, features, voice    │
+│   │   └── ❌ MISSING: hook_style, cta_strength                               │
+│   │                                                                          │
+│   ├── challenger_prompt() - Prompt for Gemini critique                       │
+│   │   └── Uses: tone, features, target_chars                                 │
+│   │                                                                          │
+│   ├── synthesizer_prompt() - Prompt for final merge                          │
+│   │   └── Uses: format_style, target_chars                                   │
+│   │                                                                          │
+│   └── judge_prompt() - Prompt for Claude to pick winner                      │
+│       └── Uses: platform only                                                │
+└─────────────────────────────────────────────────────────────────────────────┘
+                          │
+                          ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│   app/config/platform_policies.py                                            │
+│   ├── PLATFORM_POLICIES - Default settings for each platform                 │
+│   │   Example for LinkedIn:                                                  │
+│   │   {                                                                      │
+│   │     "char_limit": 3000,                                                  │
+│   │     "target_chars": 700,                                                 │
+│   │     "tone": "direct, human, reflective",                                 │
+│   │     "features": "Short paragraphs, no links, hashtags...",               │
+│   │   }                                                                      │
+│   │                                                                          │
+│   ├── get_platform_policy(platform) - Returns default policy                 │
+│   │                                                                          │
+│   └── merge_policies(default, override) - Combines user settings             │
+│       └── User values OVERRIDE defaults when provided                        │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 📁 FILE DESCRIPTIONS: What Each File Does
+
+### Backend Files (app/)
+
+| File | Purpose | When To Edit |
+|------|---------|--------------|
+| **main.py** | API endpoints, request validation | Add new API routes, change validation rules |
+| **config/platform_policies.py** | Default policies per platform, `merge_policies()` | Change default char limits, tones, features |
+| **services/agentic_flow.py** | 4-step AI pipeline (Drafter→Challenger→Synthesizer→Judge) | Change which AI runs each step |
+| **services/prompt_adapter.py** | ⚠️ **THE PROMPT TEXT** sent to AI models | **EDIT THIS to make AI use hook_style, cta_strength** |
+| **services/content_generator.py** | Orchestrates generation, retry logic | Change retry behavior, model fallback |
+| **services/ai_provider.py** | Calls to OpenAI, Gemini, Claude, Grok APIs | Change AI model versions, API parameters |
+| **services/model_router.py** | Which AI model to use per platform | Change LinkedIn→GPT-5, Twitter→Grok etc. |
+| **services/circuit_breaker.py** | Detects when AI models fail | Change failure thresholds |
+
+### Frontend Files (frontend/src/)
+
+| File | Purpose | When To Edit |
+|------|---------|--------------|
+| **App.tsx** | Main app, API calls, state management | Change how API is called |
+| **components/ContentComposer.tsx** | Input form, platform checkboxes, customize button | Add/remove UI controls |
+| **components/PolicyControls.tsx** | Slider, dropdowns, checkboxes for settings | Change UI for settings |
+| **types/policy.ts** | TypeScript types for settings | Add new setting types |
+
+---
+
+## ⚠️ CURRENT ISSUE: Not All Settings Reach The Prompts
+
+**What's Working:**
+- ✅ target_chars → Used in prompts
+- ✅ tone → Used in prompts  
+- ✅ features → Used in prompts
+- ✅ voice_profile → Used in prompts
+
+**What's NOT Working:**
+- ❌ hook_style → Merged but NOT in prompt text
+- ❌ cta_strength → Merged but NOT in prompt text
+
+**To Fix:** Edit `app/services/prompt_adapter.py` and add hook_style and cta_strength to the prompt templates.
 
 ## Platform Specifications
 

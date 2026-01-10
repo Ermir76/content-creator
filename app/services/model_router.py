@@ -1,8 +1,8 @@
 """Model routing logic for selecting AI providers based on platform."""
 
 from typing import Tuple
-from app.config.platform_policies import get_platform_policy
-from app.services.ai_provider import AIProvider, create_provider
+from app.core.platform_defaults import get_platform_policy
+from app.providers.ai_provider import AIProvider, create_provider
 
 
 class ModelRouter:

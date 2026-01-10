@@ -1,8 +1,9 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -10,13 +11,12 @@ from sqlalchemy.orm import Session
 from app.database import Base, engine, get_db
 from app.models.models import GeneratedContent, User
 from app.models.response_models import GenerationResponse
-from app.services.content_generator import (
+from app.services.content import (
     generate_content as generate_multi_platform_content,
-)
-from app.services.content_generator import (
     get_circuit_breaker_status,
     reset_circuit_breaker,
 )
+from app.core.exceptions import ContentCreatorException
 
 load_dotenv()
 
@@ -50,9 +50,27 @@ async def health_check():
 
 
 # Pydantic models for request/response validation
+class PolicyOverride(BaseModel):
+    """Custom policy overrides for content generation."""
+
+    target_chars: Optional[int] = None  # 500-1500
+    tone: Optional[str] = None  # Professional, Casual, Direct, Storytelling
+    features: Optional[List[str]] = (
+        None  # hashtags, emojis, questions, short_paragraphs
+    )
+    voice_profile: Optional[str] = None
+    hook_style: Optional[str] = (
+        None  # Question, Bold statement, Story, Fact, Anti-pattern
+    )
+    cta_strength: Optional[str] = None  # None, Soft, Medium, Strong
+
+
 class ContentGenerateRequest(BaseModel):
     idea_prompt: str
     platforms: List[str]
+    platform_policies: Optional[Dict[str, PolicyOverride]] = (
+        None  # Per-platform custom policies
+    )
 
 
 class ContentSaveRequest(BaseModel):
@@ -85,6 +103,12 @@ class GeneratedContentResponse(BaseModel):
         from_attributes = True
 
 
+class ContentUpdateRequest(BaseModel):
+    """Request model for updating content text."""
+
+    content_text: str
+
+
 @app.post("/content/generate", response_model=GenerationResponse)
 async def generate_content(
     request: ContentGenerateRequest, db: Session = Depends(get_db)
@@ -97,17 +121,44 @@ async def generate_content(
 
     - **idea_prompt**: The content idea or topic
     - **platforms**: List of platforms (e.g., ["linkedin", "twitter", "reddit", "instagram"])
+    - **platform_policies**: Optional per-platform custom policy overrides
 
     Returns GenerationResponse with results for each platform, including success/failure status.
     """
-    # MVP: Hardcoded voice profile
-    voice_profile = "Professional, engaging, and authentic. Uses storytelling and practical examples."
+    # Validate policy overrides if provided
+    if request.platform_policies:
+        valid_tones = ["Professional", "Casual", "Direct", "Storytelling"]
+        valid_hooks = ["Question", "Bold statement", "Story", "Fact", "Anti-pattern"]
+        valid_cta = ["None", "Soft", "Medium", "Strong"]
 
-    # Generate content using orchestrator (no auto-save)
+        for platform, policy in request.platform_policies.items():
+            if policy.target_chars is not None and not (
+                500 <= policy.target_chars <= 1500
+            ):
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"target_chars for {platform} must be between 500 and 1500",
+                )
+            if policy.tone is not None and policy.tone not in valid_tones:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"tone for {platform} must be one of: {valid_tones}",
+                )
+            if policy.hook_style is not None and policy.hook_style not in valid_hooks:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"hook_style for {platform} must be one of: {valid_hooks}",
+                )
+            if policy.cta_strength is not None and policy.cta_strength not in valid_cta:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"cta_strength for {platform} must be one of: {valid_cta}",
+                )
+
+    # Generate content using new pipeline
     generation_response = generate_multi_platform_content(
         idea=request.idea_prompt,
         platforms=request.platforms,
-        voice_profile=voice_profile,
     )
 
     return generation_response
@@ -170,12 +221,6 @@ async def delete_content(content_id: int, db: Session = Depends(get_db)):
     return {"message": "Content deleted successfully", "id": content_id}
 
 
-class ContentUpdateRequest(BaseModel):
-    """Request model for updating content text."""
-
-    content_text: str
-
-
 @app.put("/content/{content_id}", response_model=GeneratedContentResponse)
 async def update_content(
     content_id: int, request: ContentUpdateRequest, db: Session = Depends(get_db)
@@ -236,3 +281,13 @@ async def reset_model_circuit(model_name: Optional[str] = None):
     else:
         reset_circuit_breaker(model_name)
         return {"message": f"Circuit breaker reset for {model_name}"}
+
+
+@app.exception_handler(ContentCreatorException)
+async def content_creator_exception_handler(
+    request: Request, exc: ContentCreatorException
+):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"error": exc.code, "message": exc.message},
+    )

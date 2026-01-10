@@ -1,0 +1,140 @@
+"""
+Main content generation orchestration service.
+
+This module coordinates content generation using the new pipeline.
+"""
+
+from app.models.response_models import GenerationResponse, PlatformResult
+from app.services.orchestrate import run_pipeline
+
+
+# Error codes for classification
+class ErrorCode:
+    """Standard error codes for content generation failures."""
+
+    RATE_LIMIT = "RATE_LIMIT"
+    TIMEOUT = "TIMEOUT"
+    NETWORK_ERROR = "NETWORK_ERROR"
+    INVALID_API_KEY = "INVALID_API_KEY"
+    VALIDATION_FAILED = "VALIDATION_FAILED"
+    PROVIDER_ERROR = "PROVIDER_ERROR"
+    ALL_MODELS_FAILED = "ALL_MODELS_FAILED"
+    UNKNOWN = "UNKNOWN"
+
+
+def classify_error(error: Exception) -> str:
+    """Classify an error into a standard error code."""
+    error_str = str(error).lower()
+
+    if any(kw in error_str for kw in ["rate limit", "429", "quota"]):
+        return ErrorCode.RATE_LIMIT
+    if any(kw in error_str for kw in ["timeout", "timed out"]):
+        return ErrorCode.TIMEOUT
+    if any(kw in error_str for kw in ["network", "connection", "503", "502"]):
+        return ErrorCode.NETWORK_ERROR
+    if any(kw in error_str for kw in ["api key", "401", "403", "unauthorized"]):
+        return ErrorCode.INVALID_API_KEY
+    if any(kw in error_str for kw in ["500", "internal server error"]):
+        return ErrorCode.PROVIDER_ERROR
+
+    return ErrorCode.UNKNOWN
+
+
+def generate_for_platform(idea: str, platform: str) -> PlatformResult:
+    """
+    Generate content for a single platform using the new pipeline.
+
+    Args:
+        idea: Content idea/prompt
+        platform: Target platform (e.g., 'linkedin', 'twitter')
+
+    Returns:
+        PlatformResult with success/failure status and content
+    """
+    try:
+        pipeline_result = run_pipeline(user_input=idea, platform=platform)
+
+        # Get winning version from judge ranking
+        winner_label = (
+            pipeline_result.judge_result.ranking[0]
+            if pipeline_result.judge_result.ranking
+            else "A"
+        )
+        versions = {
+            "v1": pipeline_result.v1,
+            "v2": pipeline_result.v2,
+            "v3": pipeline_result.v3,
+        }
+        winner_version = pipeline_result.shuffle_map.get(winner_label, "v1")
+        content = versions.get(winner_version, pipeline_result.v1)
+
+        return PlatformResult(
+            platform=platform,
+            success=True,
+            content=content,
+            model_used="Pipeline (Generator + Critic + Improver + Blind Judge)",
+            error=None,
+            error_code=None,
+            char_count=len(content),
+            drafts=[
+                {"step": "Generator (v1)", "content": pipeline_result.v1},
+                {"step": "Critic (v2)", "content": pipeline_result.v2},
+                {"step": "Improver (v3)", "content": pipeline_result.v3},
+                {"step": "Judge", "content": str(pipeline_result.judge_result.scores)},
+            ],
+        )
+
+    except Exception as e:
+        error_code = classify_error(e)
+        return PlatformResult(
+            platform=platform,
+            success=False,
+            content=None,
+            model_used=None,
+            error=str(e),
+            error_code=error_code,
+            char_count=None,
+        )
+
+
+def generate_content(idea: str, platforms: list[str]) -> GenerationResponse:
+    """
+    Generate content for multiple platforms.
+
+    Args:
+        idea: Content idea/prompt
+        platforms: List of platform names
+
+    Returns:
+        GenerationResponse with all results
+    """
+    results: list[PlatformResult] = []
+    success_count = 0
+    failure_count = 0
+
+    for platform in platforms:
+        result = generate_for_platform(idea=idea, platform=platform)
+        results.append(result)
+
+        if result.success:
+            success_count += 1
+        else:
+            failure_count += 1
+
+    return GenerationResponse(
+        results=results,
+        success_count=success_count,
+        failure_count=failure_count,
+        total_platforms=len(platforms),
+    )
+
+
+# Keep these for API compatibility (main.py imports them)
+def get_circuit_breaker_status() -> dict:
+    """Stub - circuit breaker removed."""
+    return {"status": "Circuit breaker removed - using new pipeline"}
+
+
+def reset_circuit_breaker(model_name: str = None) -> None:
+    """Stub - circuit breaker removed."""
+    pass

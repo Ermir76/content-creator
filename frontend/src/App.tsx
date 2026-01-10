@@ -8,6 +8,7 @@ import { Toaster, toast } from 'sonner';
 import axios from 'axios';
 import { contentApi } from './services/contentApi';
 import type { PlatformResult } from './types/content';
+import type { PlatformPolicies } from './types/policy';
 
 
 
@@ -23,16 +24,17 @@ function App() {
   const [currentView, setCurrentView] = useState<ViewType>('create');
   const [generatedContent, setGeneratedContent] = useState<PlatformResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [lastRequest, setLastRequest] = useState<{ ideaPrompt: string; platforms: string[] } | null>(null);
+  const [lastRequest, setLastRequest] = useState<{ ideaPrompt: string; platforms: string[]; platformPolicies: PlatformPolicies } | null>(null);
 
-  const handleGenerate = async (ideaPrompt: string, platforms: string[]) => {
+  const handleGenerate = async (ideaPrompt: string, platforms: string[], platformPolicies: PlatformPolicies = {}) => {
     setIsLoading(true);
-    setLastRequest({ ideaPrompt, platforms });
+    setLastRequest({ ideaPrompt, platforms, platformPolicies });
 
     try {
       const response = await axios.post<GenerationResponse>('/content/generate', {
         idea_prompt: ideaPrompt,
         platforms: platforms,
+        platform_policies: Object.keys(platformPolicies).length > 0 ? platformPolicies : undefined,
       });
 
       const { results, success_count, failure_count, total_platforms } = response.data;
@@ -106,7 +108,7 @@ function App() {
 
   const handleRetry = () => {
     if (lastRequest) {
-      handleGenerate(lastRequest.ideaPrompt, lastRequest.platforms);
+      handleGenerate(lastRequest.ideaPrompt, lastRequest.platforms, lastRequest.platformPolicies);
     }
   };
 
