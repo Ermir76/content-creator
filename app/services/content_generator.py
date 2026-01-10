@@ -15,6 +15,7 @@ from app.services.model_router import ModelRouter
 from app.services.output_validator import OutputValidator
 from app.services.prompt_adapter import PromptAdapter
 from app.services.retry_handler import RetryHandler
+from app.services.agentic_flow import AgenticFlow
 
 
 # Error codes for classification
@@ -241,6 +242,31 @@ def generate_for_platform(
             )
 
         # Try to generate with retry/fallback logic
+
+        # AGENTIC FLOW EXPERIMENT FOR LINKEDIN
+        if platform.lower() == "linkedin":
+            try:
+                # Use the new 4-stage Agentic Pipeline
+                content, drafts = AgenticFlow.generate_flow(
+                    idea=idea, platform=platform, voice_profile=voice_profile
+                )
+
+                return PlatformResult(
+                    platform=platform,
+                    success=True,
+                    content=content,
+                    model_used="Agentic Pipeline (GPT-4o + Gemini + Claude)",
+                    error=None,
+                    error_code=None,
+                    char_count=len(content),
+                    drafts=drafts,
+                )
+            except Exception as e:
+                print(
+                    f"⚠️ AGENTIC FLOW FAILED: {e}. Falling back to standard generation."
+                )
+                # Fallthrough to standard generation below
+
         content, model_used, regeneration_count = try_generate_with_retry(
             idea=idea,
             platform=platform,

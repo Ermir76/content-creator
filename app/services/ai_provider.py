@@ -9,7 +9,7 @@ class AIProvider(ABC):
     """Abstract base class for AI content generation providers."""
 
     @abstractmethod
-    def generate(self, prompt: str) -> str:
+    def generate(self, prompt: str, model: str = None) -> str:
         """Generate content based on the given prompt."""
         pass
 
@@ -32,9 +32,16 @@ class GeminiProvider(AIProvider):
         genai.configure(api_key=api_key)  # type: ignore
         self.model = genai.GenerativeModel("gemini-3-flash-preview")  # type: ignore
 
-    def generate(self, prompt: str) -> str:
+    def generate(self, prompt: str, model: str = None) -> str:
         """Generate content using Gemini."""
-        response = self.model.generate_content(prompt)
+        # Use specific model if requested, otherwise default to instance model
+        active_model = self.model
+        if model:
+            import google.generativeai as genai  # type: ignore
+
+            active_model = genai.GenerativeModel(model)
+
+        response = active_model.generate_content(prompt)
         return response.text.strip()
 
     def get_name(self) -> str:
@@ -61,13 +68,15 @@ class OpenAIProvider(AIProvider):
                     "openai package not installed. Run: pip install openai"
                 )
 
-    def generate(self, prompt: str) -> str:
+    def generate(self, prompt: str, model: str = None) -> str:
         """Generate content using OpenAI."""
         if not self._has_key or not self.client:
             raise ValueError("OPENAI_API_KEY not configured")
 
+        target_model = model or "gpt-5-mini"
+
         response = self.client.chat.completions.create(
-            model="gpt-5-mini",  # Using GPT-5-mini for cost efficiency
+            model=target_model,
             messages=[{"role": "user", "content": prompt}],
         )
         return (response.choices[0].message.content or "").strip()
@@ -96,13 +105,15 @@ class AnthropicProvider(AIProvider):
                     "anthropic package not installed. Run: pip install anthropic"
                 )
 
-    def generate(self, prompt: str) -> str:
+    def generate(self, prompt: str, model: str = None) -> str:
         """Generate content using Claude."""
         if not self._has_key or not self.client:
             raise ValueError("ANTHROPIC_API_KEY not configured")
 
+        target_model = model or "claude-haiku-4-5"
+
         message = self.client.messages.create(
-            model="claude-haiku-4-5",  # Using Claude Haiku 4.5
+            model=target_model,
             max_tokens=1024,
             messages=[{"role": "user", "content": prompt}],
         )
@@ -136,13 +147,15 @@ class XAIProvider(AIProvider):
                     "openai package not installed. Run: pip install openai"
                 )
 
-    def generate(self, prompt: str) -> str:
+    def generate(self, prompt: str, model: str = None) -> str:
         """Generate content using Grok."""
         if not self._has_key or not self.client:
             raise ValueError("GROK_API_KEY not configured")
 
+        target_model = model or "grok-4-1-fast-reasoning"
+
         response = self.client.chat.completions.create(
-            model="grok-4-1-fast-reasoning",
+            model=target_model,
             messages=[{"role": "user", "content": prompt}],
             temperature=0.7,
             max_tokens=1000,
