@@ -19,6 +19,29 @@ export interface ContentHistoryItem {
 }
 
 /**
+ * Represents a single step's draft in the agentic flow
+ */
+export interface Draft {
+    step: string;
+    model: string;
+    content: string;
+}
+
+/**
+ * Result of content generation for a single platform
+ */
+export interface PlatformResult {
+    platform: string;
+    success: boolean;
+    content?: string;
+    model_used?: string;
+    error?: string;
+    error_code?: string;
+    char_count?: number;
+    drafts?: Draft[];
+}
+
+/**
  * Supported platform types
  */
 export type Platform = 'linkedin' | 'twitter' | 'reddit' | 'instagram' | 'facebook' | 'tiktok';

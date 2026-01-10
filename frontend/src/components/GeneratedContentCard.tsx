@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Copy, Check, AlertCircle, RefreshCw, Cpu, Eye, Save, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { ContentModal } from './ContentModal';
+import type { Draft } from '../types/content';
 
 interface GeneratedContentCardProps {
   platform: string;
@@ -13,6 +14,8 @@ interface GeneratedContentCardProps {
   modelUsed?: string;
   error?: string;
   errorCode?: string;
+  char_count?: number;
+  drafts?: Draft[];
   onRetry?: () => void;
   onSave?: () => Promise<void>;
 }
@@ -66,6 +69,7 @@ export function GeneratedContentCard({
   modelUsed,
   error,
   errorCode,
+  drafts,
   onRetry,
   onSave
 }: GeneratedContentCardProps) {
@@ -74,10 +78,26 @@ export function GeneratedContentCard({
   const [saving, setSaving] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
 
+  // State for selected draft (defaults to last one, which is "Final Judge" or just the content)
+  // If no drafts, index is -1
+  const [selectedDraftIndex, setSelectedDraftIndex] = useState<number>(
+    drafts && drafts.length > 0 ? drafts.length - 1 : -1
+  );
+
+  // Content to display: either selected draft or the main 'content' prop
+  const displayContent = (selectedDraftIndex >= 0 && drafts)
+    ? drafts[selectedDraftIndex].content
+    : (content || '');
+
+  // Model to display: specific draft model or main modelUsed
+  const displayModel = (selectedDraftIndex >= 0 && drafts)
+    ? drafts[selectedDraftIndex].model
+    : modelUsed;
+
   const handleCopy = async () => {
-    if (!content) return;
+    if (!displayContent) return;
     try {
-      await navigator.clipboard.writeText(content);
+      await navigator.clipboard.writeText(displayContent);
       setCopied(true);
       toast.success('Copied to clipboard!', {
         description: `${platformLabel} content is ready to paste`
@@ -112,14 +132,14 @@ export function GeneratedContentCard({
 
   const platformColor = PLATFORM_COLORS[platform.toLowerCase()] || 'bg-gray-600';
   const platformLabel = PLATFORM_LABELS[platform.toLowerCase()] || platform;
-  const modelLabel = modelUsed ? (MODEL_LABELS[modelUsed.toLowerCase()] || modelUsed) : null;
-  const modelColor = modelUsed ? (MODEL_COLORS[modelUsed.toLowerCase()] || 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300') : '';
+  const modelLabel = displayModel ? (MODEL_LABELS[displayModel.toLowerCase()] || displayModel) : null;
+  const modelColor = displayModel ? (MODEL_COLORS[displayModel.toLowerCase()] || 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300') : '';
   const errorMessage = errorCode ? (ERROR_MESSAGES[errorCode] || error) : error;
 
   // Truncate content for preview
-  const previewText = content && content.length > 200
-    ? content.substring(0, 200) + '...'
-    : content;
+  const previewText = displayContent && displayContent.length > 200
+    ? displayContent.substring(0, 200) + '...'
+    : displayContent;
 
   // Error Card View
   if (!success) {
@@ -183,7 +203,7 @@ export function GeneratedContentCard({
                 </Badge>
               )}
             </div>
-            {modelUsed && (
+            {displayModel && (
               <Badge variant="outline" className={`${modelColor} text-xs`}>
                 <Cpu className="w-3 h-3 mr-1" />
                 {modelLabel}
@@ -192,6 +212,29 @@ export function GeneratedContentCard({
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
+          {/* Draft Tabs */}
+          {drafts && drafts.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-2">
+              {drafts.map((draft, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setSelectedDraftIndex(idx)}
+                  className={`px-3 py-1 text-xs rounded-full transition-all border ${selectedDraftIndex === idx
+                    ? 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700 font-medium'
+                    : 'bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-800/50 dark:text-slate-400 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  title={`${draft.step} used ${draft.model}`}
+                >
+                  {draft.step === "Final Judge" ? "✨ Final" :
+                    draft.step === "Drafter" ? "📝 V1" :
+                      draft.step.includes("Challenger") ? "🤔 V2" :
+                        draft.step === "Synthesizer" ? "🔬 V3" :
+                          draft.step}
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* Content Preview - Clickable to open modal */}
           <div
             onClick={() => setModalOpen(true)}
@@ -203,9 +246,9 @@ export function GeneratedContentCard({
           </div>
 
           {/* Character count */}
-          {content && (
+          {displayContent && (
             <div className="text-xs text-slate-400 dark:text-slate-500 text-right">
-              {content.length} characters
+              {displayContent.length} characters
             </div>
           )}
 
@@ -245,8 +288,8 @@ export function GeneratedContentCard({
                 variant="outline"
                 size="sm"
                 className={`flex-1 transition-all ${saved
-                    ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700 text-green-600 dark:text-green-400'
-                    : 'border-green-400 dark:border-green-600 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20'
+                  ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700 text-green-600 dark:text-green-400'
+                  : 'border-green-400 dark:border-green-600 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20'
                   }`}
                 disabled={saved || saving}
               >
@@ -277,8 +320,8 @@ export function GeneratedContentCard({
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         platform={platform}
-        content={content || ''}
-        modelUsed={modelUsed}
+        content={displayContent || ''}
+        modelUsed={displayModel}
         canEdit={false}
       />
     </>

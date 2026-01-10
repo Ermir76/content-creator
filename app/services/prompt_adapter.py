@@ -1,6 +1,6 @@
 """Prompt adaptation for different AI models."""
 
-from typing import Optional
+from typing import Optional, Dict, Any
 import textwrap
 
 from app.config.platform_policies import get_platform_policy
@@ -270,3 +270,126 @@ INSTRUCTIONS:
 6. Make it engaging and valuable to the audience
 
 Generate the post now:"""
+
+    @staticmethod
+    def challenger_prompt(
+        draft: str,
+        platform: str,
+        policy: Dict[str, Any],
+    ) -> str:
+        """
+        Step 2: The Challenger (Gemini).
+        Critiques AND Rewrites the draft to be more logical and compliant.
+        """
+        char_limit = policy.get("char_limit", 2000)
+        target_chars = policy.get("target_chars")
+        tone = policy.get("tone", "engaging")
+        features = policy.get("features", "")
+        format_style = policy.get("format", "")
+
+        # Build char instruction
+        if target_chars:
+            char_instruction = f"Target ~{target_chars} characters (hard max: {char_limit})"
+        else:
+            char_instruction = f"Maximum {char_limit} characters"
+
+        return f"""You are a Ruthless Editor for {platform.upper()}.
+
+Your goal is to optimize this content for VIRALITY and ENGAGEMENT.
+
+CURRENT DRAFT V1:
+{draft}
+
+YOUR MISSION:
+1. CRITIQUE V1: Identify 3 key weaknesses (e.g., boring hook, filler words, weak CTA, not following platform rules).
+2. REWRITE V2: Write a completely NEW version ("Draft V2") that solves these issues.
+
+PLATFORM RULES:
+- Tone: {tone}
+- Format: {format_style}
+- Features: {features}
+- LENGTH: {char_instruction}
+
+OUTPUT FORMAT:
+CRITIQUE:
+- [Point 1]
+- [Point 2]
+- [Point 3]
+
+<<<DRAFT_V2_START>>>
+[Your complete rewritten post]"""
+
+    @staticmethod
+    def synthesizer_prompt(
+        draft1: str,
+        critique: str,
+        draft2: str,
+        platform: str,
+        policy: Dict[str, Any],
+    ) -> str:
+        """
+        Step 3: The Synthesizer (GPT-4o).
+        Combines the creative spark of V1 with the logical structure of V2.
+        """
+        format_style = policy.get("format", "")
+        char_limit = policy.get("char_limit", 2000)
+        target_chars = policy.get("target_chars")
+
+        # Build char instruction
+        if target_chars:
+            char_instruction = f"Target ~{target_chars} characters (hard max: {char_limit})"
+        else:
+            char_instruction = f"Maximum {char_limit} characters"
+
+        return f"""You are an Expert Content Synthesizer.
+
+We have two drafts for a {platform.upper()} post.
+
+DRAFT V1 (Creative/Story-driven):
+{draft1}
+
+CRITIQUE OF V1:
+{critique}
+
+DRAFT V2 (Logical/Compliant):
+{draft2}
+
+TASK:
+Create "Draft V3" - the FINAL version.
+- Combine the "Soul" and storytelling of V1.
+- With the "Discipline" and structure of V2.
+- Ensure strict adherence to: {format_style}
+- LENGTH: {char_instruction}
+
+Output ONLY the final post content."""
+
+    @staticmethod
+    def judge_prompt(
+        draft1: str,
+        draft2: str,
+        draft3: str,
+        platform: str,
+    ) -> str:
+        """
+        Step 4: The Judge (Selector).
+        Evaluates V1, V2, and V3 and picks the winner.
+        """
+        return f"""You are the Final Strategy Judge for {platform.upper()}.
+
+We have 3 candidate drafts for a post:
+
+DRAFT A:
+{draft1}
+
+DRAFT B:
+{draft2}
+
+DRAFT C:
+{draft3}
+
+TASK:
+1. Analyze which draft BEST fits the {platform.upper()} algorithm and audience.
+2. Select the winner.
+3. You may make *tiny* polish edits (grammar/formatting) to the winner if absolutely necessary, but prefer the original.
+
+Output ONLY the content of the winning post. Nothing else."""

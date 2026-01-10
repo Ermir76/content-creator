@@ -7,17 +7,9 @@ import { ArrowUp, Loader2 } from 'lucide-react';
 import { Toaster, toast } from 'sonner';
 import axios from 'axios';
 import { contentApi } from './services/contentApi';
+import type { PlatformResult } from './types/content';
 
-// Updated interface to match PlatformResult from backend
-interface PlatformResult {
-  platform: string;
-  success: boolean;
-  content?: string;  // Optional - only present on success
-  model_used?: string;
-  error?: string;
-  error_code?: string;
-  char_count?: number;
-}
+
 
 // Response structure from /content/generate endpoint
 interface GenerationResponse {
@@ -173,6 +165,7 @@ function App() {
                       modelUsed={result.model_used}
                       error={result.error}
                       errorCode={result.error_code}
+                      drafts={result.drafts}
                       onRetry={() => handleRetryPlatform(result.platform)}
                       onSave={result.success && result.content && lastRequest ? async () => {
                         await contentApi.saveContent({
