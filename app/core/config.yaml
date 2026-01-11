@@ -1,80 +1,103 @@
 # CUSTOMIZE.YAML
-# Weights: 0.0 = off, 0.3 = subtle, 0.5 = balanced, 0.7 = strong, 1.0 = dominant
-# Rule: Don't set everything high. Use contrast.
+# Structure:
+# - defaults: Global settings (Persona, Style)
+# - platforms: Per-platform overrides
+# - models: AI Model routing
 
-constraints:
-  char_limit: 700             # options: 280, 500, 1000, 2000, 3000
-  target_chars: 500           # options: 100, 280, 500, 700, 1000
-  hashtags: 3                 # range: 0-15
+defaults:
+  constraints:
+    char_limit: 700             # options: 280, 500, 1000, 2000, 3000
+    target_chars: 500           # options: 100, 280, 500, 700, 1000
+    hashtags: 3                 # range: 0-15
 
-author_persona:
-  perspective: "first-person" # options: first-person, second-person, third-person
-  personality:
-    human: 0.8                # imperfect, real, relatable
-    professional: 0.0         # competent, credible
-    friendly: 0.3             # warm, approachable
-    vulnerable: 0.5           # admits struggles, doubts, failures
-    provocative: 0.0          # challenges assumptions
-    opinionated: 0.3          # takes strong stances
-  authenticity:
-    honest: 0.9               # truthful, no bullshit
-    polished: 0.0             # clean, edited, smooth
-    raw: 0.4                  # unfiltered, rough edges
-  corporate: false            # true = brand voice, false = human voice
+  author_persona:
+    perspective: "first-person" # options: first-person, second-person, third-person
+    personality:
+      human: 0.8                # imperfect, real, relatable
+      professional: 0.0         # competent, credible
+      friendly: 0.3             # warm, approachable
+      vulnerable: 0.5           # admits struggles, doubts, failures
+      provocative: 0.0          # challenges assumptions
+      opinionated: 0.3          # takes strong stances
+    authenticity:
+      honest: 0.9               # truthful, no bullshit
+      polished: 0.0             # clean, edited, smooth
+      raw: 0.4                  # unfiltered, rough edges
+    corporate: false            # true = brand voice, false = human voice
 
-writing_style:
-  style:
-    direct: 0.7               # straight to the point
-    indirect: 0.0             # builds up, circles around
-    casual: 0.4               # relaxed, conversational
-  mood:
-    reflective: 0.6           # thoughtful, introspective
-    energetic: 0.0            # momentum, excitement
-    serious: 0.0              # weight, gravity
-    inspiring: 0.3            # uplifting, forward-looking
-    urgent: 0.0               # act now, time matters
-    calm: 0.0                 # measured, zen
-    defiant: 0.0              # against the grain
-    curious: 0.3              # exploring, questioning
-  approach:
-    direct: 0.0               # gets to the point fast
-    storytelling: 0.7         # narrative, "let me tell you..."
-    educational: 0.3          # teaching, explaining
-  humor:
-    enabled: false
-    intensity: 0.0            # 0.0 = none, 1.0 = comedy show
-    types:
-      dry: 0.0                # understated, deadpan
-      witty: 0.0              # clever wordplay
-      sarcastic: 0.0          # mocking, ironic (risky)
-      slapstick: 0.0          # physical comedy in words
-      self_deprecating: 0.0   # laughing at yourself
-      absurdist: 0.0          # surreal, unexpected
-  short_paragraphs: true
-  emojis: "none"              # options: none, low, mild, heavy
+  writing_style:
+    style:
+      direct: 0.7               # straight to the point
+      indirect: 0.0             # builds up, circles around
+      casual: 0.4               # relaxed, conversational
+    mood:
+      reflective: 0.6           # thoughtful, introspective
+      energetic: 0.0            # momentum, excitement
+      serious: 0.0              # weight, gravity
+      inspiring: 0.3            # uplifting, forward-looking
+      urgent: 0.0               # act now, time matters
+      calm: 0.0                 # measured, zen
+      defiant: 0.0              # against the grain
+      curious: 0.3              # exploring, questioning
+    approach:
+      direct: 0.0               # gets to the point fast
+      storytelling: 0.7         # narrative, "let me tell you..."
+      educational: 0.3          # teaching, explaining
+    humor:
+      enabled: false
+      intensity: 0.0            # 0.0 = none, 1.0 = comedy show
+      types:
+        dry: 0.0                # understated, deadpan
+        witty: 0.0              # clever wordplay
+        sarcastic: 0.0          # mocking, ironic (risky)
+        slapstick: 0.0          # physical comedy in words
+        self_deprecating: 0.0   # laughing at yourself
+        absurdist: 0.0          # surreal, unexpected
+    short_paragraphs: true
+    emojis: "none"              # options: none, low, mild, heavy
 
-format:
-  hook:
-    punchy: 0.0               # short, sharp, stops the scroll
-    question: 0.0             # asks the reader directly
-    statistic: 0.0            # leads with data/numbers
-    story: 0.0                # opens with narrative
-    bold_claim: 0.0           # stakes a position immediately
-    contrarian: 0.0           # "Everyone says X. They're wrong."
-    confession: 0.8           # "I used to believe..."
-    pain_point: 0.3           # names the reader's problem
-  body:
-    type: "honest-experience" # options: honest-experience, how-to, list, story, analysis
-    texture:
-      examples: 0.5           # "For example..." concrete illustrations
-      data: 0.0               # numbers, stats, percentages
-      analogy: 0.3            # "It's like..." comparisons
-      dialogue: 0.0           # quotes, conversations
-      tension: 0.5            # problem before solution
-  ending:
-    one_question: 0.7         # invites response
-    call_to_action: 0.0       # tells them what to do
-    statement: 0.0            # lands with conviction
-    cliffhanger: 0.0          # leaves them hanging
-    callback: 0.3             # references the hook, full circle
-    challenge: 0.0            # "I dare you to..."
+  format:
+    hook:
+      punchy: 0.0               # short, sharp, stops the scroll
+      question: 0.0             # asks the reader directly
+      statistic: 0.0            # leads with data/numbers
+      story: 0.0                # opens with narrative
+      bold_claim: 0.0           # stakes a position immediately
+      contrarian: 0.0           # "Everyone says X. They're wrong."
+      confession: 0.8           # "I used to believe..."
+      pain_point: 0.3           # names the reader's problem
+    body:
+      type: "honest-experience" # options: honest-experience, how-to, list, story, analysis
+      texture:
+        examples: 0.5           # "For example..." concrete illustrations
+        data: 0.0               # numbers, stats, percentages
+        analogy: 0.3            # "It's like..." comparisons
+        dialogue: 0.0           # quotes, conversations
+        tension: 0.5            # problem before solution
+    ending:
+      one_question: 0.7         # invites response
+      call_to_action: 0.0       # tells them what to do
+      statement: 0.0            # lands with conviction
+      cliffhanger: 0.0          # leaves them hanging
+      callback: 0.3             # references the hook, full circle
+      challenge: 0.0            # "I dare you to..."
+
+# Platform Overrides (Can override defaults AND set specific models)
+platforms:
+  linkedin:
+    # model: "claude" # Example: prefer Claude for long-form
+  twitter:
+    # model: "xai"    # Example: prefer XAI for short/witty
+  reddit: {}
+  instagram: {}
+  facebook: {}
+  tiktok: {}
+
+# AI Model Routing
+models:
+  default: "gemini"
+  pipeline:
+    generator: "gemini"  # The Draft
+    critic: "openai"     # The Reviewer
+    improver: "openai"   # The Refiner
+    judge: "gemini"      # The Evaluator
