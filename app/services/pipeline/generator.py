@@ -6,11 +6,14 @@ Does NOT load config - receives it from orchestrate.py.
 """
 
 from typing import Dict, Any
-from app.providers.ai_provider import create_provider
 from app.core.policy import build_prompt_instructions
+from app.services.model_router import ModelRouter
+from app.models.provider import ProviderResponse
 
 
-def generate(user_input: str, platform: str, config: Dict[str, Any]) -> str:
+async def generate(
+    user_input: str, platform: str, config: Dict[str, Any]
+) -> ProviderResponse:
     """
     Generate initial draft (v1) from idea and config.
 
@@ -20,7 +23,7 @@ def generate(user_input: str, platform: str, config: Dict[str, Any]) -> str:
         config: Configuration dict (loaded by orchestrate.py)
 
     Returns:
-        The generated content (v1)
+        ProviderResponse: The generated content and metrics
     """
     # Build prompt instructions from config weights
     style_instructions = build_prompt_instructions(config)
@@ -39,6 +42,11 @@ Just the actual post text, ready to publish.
 
 Generate the post now:"""
 
-    # Create provider and generate
-    provider = create_provider("openai")
-    return provider.generate(prompt)
+    # Routing & Resilience Logic
+    # Get Primary + Fallback providers from Router
+    providers = ModelRouter.select_model(platform)
+
+    # Execute with resilience (Handles loops, retries, and circuit breaker)
+    from app.utils.resilience import generate_with_resilience
+
+    return await generate_with_resilience(providers, prompt)

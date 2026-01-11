@@ -12,11 +12,10 @@ from app.models.schemas import (
 )
 from app.services.content import (
     generate_content as generate_multi_platform_content,
-    get_circuit_breaker_status,
-    reset_circuit_breaker,
 )
 from app.repositories import content_repo
 from app.core.platform_defaults import get_platform_policy
+from app.utils.resilience import CIRCUIT_BREAKER
 
 router = APIRouter()
 
@@ -49,7 +48,7 @@ async def generate_content(
     """
     # Logic delegated to Service Layer (orchestrate.py / content.py) which uses config.yaml logic
 
-    return generate_multi_platform_content(
+    return await generate_multi_platform_content(
         idea=request.idea_prompt, platforms=request.platforms
     )
 
@@ -91,15 +90,28 @@ async def get_all_content(db: Session = Depends(get_db)):
 @router.get("/circuit-breaker/status", tags=["System"])
 async def get_model_status():
     """Get system status."""
-    return get_circuit_breaker_status()
+    # Check standard providers + any that have failed
+    providers = ["gemini", "openai", "anthropic", "xai"]
+    tracked = list(CIRCUIT_BREAKER.failures.keys())
+    all_models = set(providers + tracked)
+
+    return {model: CIRCUIT_BREAKER.get_status(model) for model in all_models}
 
 
 @router.post("/circuit-breaker/reset/{model_name}", tags=["System"])
 async def reset_model_circuit(model_name: Optional[str] = None):
     """Reset circuit breaker."""
-    if model_name == "all":
-        reset_circuit_breaker(None)
+    if not model_name or model_name.lower() == "all":
+        # Reset everything we know about
+        known_failures = list(CIRCUIT_BREAKER.failures.keys())
+        known_open = list(CIRCUIT_BREAKER.opened_at.keys())
+        targets = set(
+            known_failures + known_open + ["gemini", "openai", "anthropic", "xai"]
+        )
+
+        for m in targets:
+            CIRCUIT_BREAKER.reset(m)
         return {"message": "All circuit breakers reset"}
     else:
-        reset_circuit_breaker(model_name)
+        CIRCUIT_BREAKER.reset(model_name)
         return {"message": f"Circuit breaker reset for {model_name}"}

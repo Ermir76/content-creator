@@ -6,11 +6,13 @@ Does NOT load config - receives it from orchestrate.py.
 """
 
 from typing import Dict, Any
-from app.providers.ai_provider import create_provider
 from app.core.policy import build_prompt_instructions
+from app.services.model_router import ModelRouter
+from app.utils.resilience import generate_with_resilience
+from app.models.provider import ProviderResponse
 
 
-def critique(v1: str, platform: str, config: Dict[str, Any]) -> str:
+async def critique(v1: str, platform: str, config: Dict[str, Any]) -> ProviderResponse:
     """
     Critique v1 and create improved v2.
 
@@ -20,7 +22,7 @@ def critique(v1: str, platform: str, config: Dict[str, Any]) -> str:
         config: Configuration dict (loaded by orchestrate.py)
 
     Returns:
-        The improved draft (v2)
+        ProviderResponse: The improved draft (v2) and metrics
     """
     # Build style instructions from config
     style_instructions = build_prompt_instructions(config)
@@ -38,6 +40,6 @@ Evaluate the draft against these criteria. If there are weaknesses, rewrite to f
 
 Output ONLY the final post. No commentary."""
 
-    # Create provider and generate
-    provider = create_provider("gemini")
-    return provider.generate(prompt)
+    # Resilience & Routing
+    providers = ModelRouter.select_model(platform)
+    return await generate_with_resilience(providers, prompt)
