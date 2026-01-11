@@ -152,7 +152,9 @@ def build_constraints_prompt(config: Dict) -> str:
 
     target_chars = constraints.get("target_chars", 0)
     if target_chars > 0:
-        parts.append(f"Target length around {target_chars} characters")
+        parts.append(
+            f"STRICT REQUIREMENT: Total length must be very close to {target_chars} characters. Do not exceed significantly"
+        )
 
     hashtags = constraints.get("hashtags", 0)
     if hashtags > 0:
