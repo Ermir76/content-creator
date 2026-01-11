@@ -10,9 +10,7 @@ from app.models.schemas import (
     GeneratedContentResponse,
     ContentUpdateRequest,
 )
-from app.services.content import (
-    generate_content as generate_multi_platform_content,
-)
+from app.services import content as content_service
 from app.repositories import content_repo
 from app.core.platform_defaults import get_platform_policy
 from app.utils.resilience import CIRCUIT_BREAKER
@@ -48,8 +46,10 @@ async def generate_content(
     """
     # Logic delegated to Service Layer (orchestrate.py / content.py) which uses config.yaml logic
 
-    return await generate_multi_platform_content(
-        idea=request.idea_prompt, platforms=request.platforms
+    return await content_service.generate_content(
+        idea=request.idea_prompt,
+        platforms=request.platforms,
+        platform_policies=request.platform_policies,
     )
 
 

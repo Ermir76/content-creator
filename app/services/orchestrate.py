@@ -12,11 +12,11 @@ Responsibilities:
 """
 
 import random
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Any
 from dataclasses import dataclass
 from dotenv import load_dotenv
 
-from app.core.policy import load_config
+from app.core.policy import get_merged_config
 from app.services.pipeline.generator import generate
 from app.services.pipeline.critic import critique
 from app.services.pipeline.improver import improve
@@ -68,7 +68,10 @@ def shuffle_versions(
 
 
 async def run_pipeline(
-    user_input: str, platform: str, config_path: str = None
+    user_input: str,
+    platform: str,
+    config_path: str = None,
+    overrides: Dict[str, Any] = None,
 ) -> PipelineResult:
     """
     Run the complete content generation pipeline.
@@ -81,8 +84,8 @@ async def run_pipeline(
     Returns:
         PipelineResult with all versions, shuffle map, and judge scores
     """
-    # Load config ONCE
-    config = load_config(config_path)
+    # Load config with overrides
+    config = get_merged_config(platform, overrides, config_path)
 
     # Step 1: Generate v1 (with validation + 1 retry)
     # Note: generate returns ProviderResponse

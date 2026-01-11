@@ -5,6 +5,7 @@ This module coordinates content generation using the new pipeline.
 """
 
 import asyncio
+from typing import Optional, Dict, Any
 from app.models.response_models import GenerationResponse, PlatformResult
 from app.services.orchestrate import run_pipeline
 
@@ -41,7 +42,9 @@ def classify_error(error: Exception) -> str:
     return ErrorCode.UNKNOWN
 
 
-async def generate_for_platform(idea: str, platform: str) -> PlatformResult:
+async def generate_for_platform(
+    idea: str, platform: str, overrides: Optional[Dict[str, Any]] = None
+) -> PlatformResult:
     """
     Generate content for a single platform using the new pipeline.
 
@@ -53,7 +56,9 @@ async def generate_for_platform(idea: str, platform: str) -> PlatformResult:
         PlatformResult with success/failure status and content
     """
     try:
-        pipeline_result = await run_pipeline(user_input=idea, platform=platform)
+        pipeline_result = await run_pipeline(
+            user_input=idea, platform=platform, overrides=overrides
+        )
 
         # Get winning version from judge ranking
         winner_label = (
@@ -114,7 +119,11 @@ async def generate_for_platform(idea: str, platform: str) -> PlatformResult:
         )
 
 
-async def generate_content(idea: str, platforms: list[str]) -> GenerationResponse:
+async def generate_content(
+    idea: str,
+    platforms: list[str],
+    platform_policies: Optional[Dict[str, Any]] = None,
+) -> GenerationResponse:
     """
     Generate content for multiple platforms (in parallel).
 
@@ -126,7 +135,13 @@ async def generate_content(idea: str, platforms: list[str]) -> GenerationRespons
         GenerationResponse with all results
     """
     # Run all platforms in parallel
-    tasks = [generate_for_platform(idea=idea, platform=p) for p in platforms]
+    tasks = []
+    for platform in platforms:
+        # Extract override for this specific platform if it exists
+        overrides = (platform_policies or {}).get(platform)
+        tasks.append(
+            generate_for_platform(idea=idea, platform=platform, overrides=overrides)
+        )
     results = await asyncio.gather(*tasks)
 
     success_count = sum(1 for r in results if r.success)

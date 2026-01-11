@@ -112,7 +112,7 @@ def _enforce_hard_limits(config: Dict, platform: str) -> Dict:
 
 
 def get_merged_config(
-    platform: str, overrides: Optional[Dict] = None
+    platform: str, overrides: Optional[Dict] = None, config_path: str = None
 ) -> Dict[str, Any]:
     """
     Get the final configuration for a specific platform request.
@@ -122,7 +122,7 @@ def get_merged_config(
     3. Request Overrides (runtime)
     4. Hard Limits (platform_defaults.py)
     """
-    full_config = load_config()
+    full_config = load_config(config_path)
 
     # 1. Start with Global Defaults
     final_config = full_config.get("defaults", {}).copy()
