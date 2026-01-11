@@ -58,12 +58,12 @@ class GeminiProvider(AIProvider):
             raise ValueError("GEMINI_API_KEY environment variable is not set")
 
         genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel("gemini-1.5-flash")
+        self.model = genai.GenerativeModel("gemini-3-flash-preview")
 
     async def generate(self, prompt: str, model: str = None) -> ProviderResponse:
         """Generate content using Gemini."""
         active_model = self.model
-        target_model_name = model or "gemini-1.5-flash"
+        target_model_name = model or "gemini-3-flash-preview"
 
         if model:
             active_model = genai.GenerativeModel(model)
@@ -115,7 +115,7 @@ class OpenAIProvider(AIProvider):
         if not self._has_key or not self.client:
             raise ValueError("OPENAI_API_KEY not configured")
 
-        target_model = model or "gpt-4o-mini"
+        target_model = model or "gpt-5-mini"
 
         start_time = time.time()
         response = await self.client.chat.completions.create(
@@ -167,7 +167,7 @@ class AnthropicProvider(AIProvider):
         if not self._has_key or not self.client:
             raise ValueError("ANTHROPIC_API_KEY not configured")
 
-        target_model = model or "claude-3-haiku-20240307"
+        target_model = model or "claude-haiku-4-5"
 
         start_time = time.time()
         message = await self.client.messages.create(
@@ -221,7 +221,7 @@ class XAIProvider(AIProvider):
         if not self._has_key or not self.client:
             raise ValueError("GROK_API_KEY not configured")
 
-        target_model = model or "grok-beta"
+        target_model = model or "grok-4-1-fast-reasoning"
 
         start_time = time.time()
         response = await self.client.chat.completions.create(

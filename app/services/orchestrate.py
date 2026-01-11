@@ -32,8 +32,11 @@ class PipelineResult:
     """Complete result from the pipeline."""
 
     v1: str
+    v1_model: str
     v2: str
+    v2_model: str
     v3: str
+    v3_model: str
     shuffle_map: Dict[str, str]  # {"A": "v1", "B": "v3", "C": "v2"}
     judge_result: JudgeResult
 
