@@ -4,6 +4,7 @@ Main content generation orchestration service.
 This module coordinates content generation using the new pipeline.
 """
 
+import asyncio
 from app.models.response_models import GenerationResponse, PlatformResult
 from app.services.orchestrate import run_pipeline
 
@@ -40,7 +41,7 @@ def classify_error(error: Exception) -> str:
     return ErrorCode.UNKNOWN
 
 
-def generate_for_platform(idea: str, platform: str) -> PlatformResult:
+async def generate_for_platform(idea: str, platform: str) -> PlatformResult:
     """
     Generate content for a single platform using the new pipeline.
 
@@ -52,7 +53,7 @@ def generate_for_platform(idea: str, platform: str) -> PlatformResult:
         PlatformResult with success/failure status and content
     """
     try:
-        pipeline_result = run_pipeline(user_input=idea, platform=platform)
+        pipeline_result = await run_pipeline(user_input=idea, platform=platform)
 
         # Get winning version from judge ranking
         winner_label = (
@@ -77,10 +78,26 @@ def generate_for_platform(idea: str, platform: str) -> PlatformResult:
             error_code=None,
             char_count=len(content),
             drafts=[
-                {"step": "Generator (v1)", "content": pipeline_result.v1},
-                {"step": "Critic (v2)", "content": pipeline_result.v2},
-                {"step": "Improver (v3)", "content": pipeline_result.v3},
-                {"step": "Judge", "content": str(pipeline_result.judge_result.scores)},
+                {
+                    "step": "Generator (v1)",
+                    "content": pipeline_result.v1,
+                    "model": pipeline_result.v1_model,
+                },
+                {
+                    "step": "Critic (v2)",
+                    "content": pipeline_result.v2,
+                    "model": pipeline_result.v2_model,
+                },
+                {
+                    "step": "Improver (v3)",
+                    "content": pipeline_result.v3,
+                    "model": pipeline_result.v3_model,
+                },
+                {
+                    "step": "Judge",
+                    "content": str(pipeline_result.judge_result.scores),
+                    "model": "judge-model",  # Placeholder or extract from judge_result if available
+                },
             ],
         )
 
@@ -97,9 +114,9 @@ def generate_for_platform(idea: str, platform: str) -> PlatformResult:
         )
 
 
-def generate_content(idea: str, platforms: list[str]) -> GenerationResponse:
+async def generate_content(idea: str, platforms: list[str]) -> GenerationResponse:
     """
-    Generate content for multiple platforms.
+    Generate content for multiple platforms (in parallel).
 
     Args:
         idea: Content idea/prompt
@@ -108,18 +125,12 @@ def generate_content(idea: str, platforms: list[str]) -> GenerationResponse:
     Returns:
         GenerationResponse with all results
     """
-    results: list[PlatformResult] = []
-    success_count = 0
-    failure_count = 0
+    # Run all platforms in parallel
+    tasks = [generate_for_platform(idea=idea, platform=p) for p in platforms]
+    results = await asyncio.gather(*tasks)
 
-    for platform in platforms:
-        result = generate_for_platform(idea=idea, platform=platform)
-        results.append(result)
-
-        if result.success:
-            success_count += 1
-        else:
-            failure_count += 1
+    success_count = sum(1 for r in results if r.success)
+    failure_count = len(results) - success_count
 
     return GenerationResponse(
         results=results,
@@ -127,14 +138,3 @@ def generate_content(idea: str, platforms: list[str]) -> GenerationResponse:
         failure_count=failure_count,
         total_platforms=len(platforms),
     )
-
-
-# Keep these for API compatibility (main.py imports them)
-def get_circuit_breaker_status() -> dict:
-    """Stub - circuit breaker removed."""
-    return {"status": "Circuit breaker removed - using new pipeline"}
-
-
-def reset_circuit_breaker(model_name: str = None) -> None:
-    """Stub - circuit breaker removed."""
-    pass

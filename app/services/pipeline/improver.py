@@ -6,11 +6,15 @@ Does NOT load config - receives it from orchestrate.py.
 """
 
 from typing import Dict, Any
-from app.providers.ai_provider import create_provider
 from app.core.policy import build_prompt_instructions
+from app.services.model_router import ModelRouter
+from app.utils.resilience import generate_with_resilience
+from app.models.provider import ProviderResponse
 
 
-def improve(v1: str, v2: str, platform: str, config: Dict[str, Any]) -> str:
+async def improve(
+    v1: str, v2: str, platform: str, config: Dict[str, Any]
+) -> ProviderResponse:
     """
     Synthesize v1 and v2 into improved v3.
 
@@ -21,7 +25,7 @@ def improve(v1: str, v2: str, platform: str, config: Dict[str, Any]) -> str:
         config: Configuration dict (loaded by orchestrate.py)
 
     Returns:
-        The synthesized draft (v3)
+        ProviderResponse: The synthesized draft (v3) and metrics
     """
     # Build style instructions from config
     style_instructions = build_prompt_instructions(config)
@@ -47,6 +51,6 @@ If one version is clearly better, use it. Don't blend for the sake of blending.
 
 Output ONLY the final post. No commentary."""
 
-    # Create provider and generate
-    provider = create_provider("openai")
-    return provider.generate(prompt)
+    # Resilience & Routing
+    providers = ModelRouter.select_model(platform)
+    return await generate_with_resilience(providers, prompt)

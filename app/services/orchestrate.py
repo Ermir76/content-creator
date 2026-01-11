@@ -64,7 +64,7 @@ def shuffle_versions(
     return texts_for_judge, reveal_map
 
 
-def run_pipeline(
+async def run_pipeline(
     user_input: str, platform: str, config_path: str = None
 ) -> PipelineResult:
     """
@@ -82,29 +82,42 @@ def run_pipeline(
     config = load_config(config_path)
 
     # Step 1: Generate v1 (with validation + 1 retry)
-    v1 = generate(user_input, platform, config)
+    # Note: generate returns ProviderResponse
+    v1_resp = await generate(user_input, platform, config)
+    v1 = v1_resp.content
+
     validation = OutputValidator.validate(v1, platform, config)
 
     if not validation.passed:
         # Retry once
-        v1 = generate(user_input, platform, config)
+        v1_resp = await generate(user_input, platform, config)
+        v1 = v1_resp.content
         validation = OutputValidator.validate(v1, platform, config)
 
         if not validation.passed:
             raise ValueError(f"Generator failed validation twice: {validation.reason}")
 
     # Step 2: Critique → v2
-    v2 = critique(v1, platform, config)
+    v2_resp = await critique(v1, platform, config)
+    v2 = v2_resp.content
 
     # Step 3: Improve → v3
-    v3 = improve(v1, v2, platform, config)
+    v3_resp = await improve(v1, v2, platform, config)
+    v3 = v3_resp.content
 
     # Step 4: Shuffle for blind judging
     texts_for_judge, reveal_map = shuffle_versions(v1, v2, v3)
 
     # Step 5: Judge (blind)
-    judge_result = judge(texts_for_judge, platform, config)
+    judge_result = await judge(texts_for_judge, platform, config)
 
     return PipelineResult(
-        v1=v1, v2=v2, v3=v3, shuffle_map=reveal_map, judge_result=judge_result
+        v1=v1,
+        v1_model=v1_resp.model_name,
+        v2=v2,
+        v2_model=v2_resp.model_name,
+        v3=v3,
+        v3_model=v3_resp.model_name,
+        shuffle_map=reveal_map,
+        judge_result=judge_result,
     )

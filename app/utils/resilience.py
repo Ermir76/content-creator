@@ -4,6 +4,7 @@ Resilience utilities: Retry logic and Circuit Breaker pattern.
 
 import time
 from typing import Any, Dict, Tuple
+from app.core.exceptions import AIProviderError
 
 
 class RetryHandler:
@@ -167,3 +168,51 @@ class CircuitBreaker:
             status["time_until_recovery"] = max(0, int(time_remaining))
 
         return status
+
+
+# Global Circuit Breaker Instance
+# Used across the application to track provider health
+CIRCUIT_BREAKER = CircuitBreaker()
+
+
+async def generate_with_resilience(
+    providers: Tuple[object, ...], prompt: str
+) -> object:
+    """
+    Execute generation with automatic fallback and circuit breaker updates.
+
+    Args:
+        providers: Tuple of (primary, fallback) providers (AIProvider objects)
+        prompt: The prompt to send
+
+    Returns:
+        ProviderResponse: The result
+
+    Raises:
+        AIProviderError: If all providers fail
+    """
+    last_exception = None
+
+    for provider in providers:
+        if not provider:
+            continue
+
+        try:
+            # Check circuit (redundant if Router checked, but good for race conditions)
+            if not CIRCUIT_BREAKER.is_available(provider.get_name()):
+                continue
+
+            # Generate
+            response = await provider.generate(prompt)
+
+            # Record Success
+            CIRCUIT_BREAKER.record_success(provider.get_name())
+            return response
+
+        except Exception as e:
+            # Record Failure
+            CIRCUIT_BREAKER.record_failure(provider.get_name())
+            last_exception = e
+
+    # If we get here, all failed
+    raise AIProviderError(f"Generation failed: {str(last_exception)}")

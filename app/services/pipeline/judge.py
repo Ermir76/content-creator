@@ -13,6 +13,7 @@ from typing import Dict, Any, List
 from dataclasses import dataclass
 from app.providers.ai_provider import create_provider
 from app.core.policy import build_prompt_instructions
+from app.utils.resilience import generate_with_resilience
 
 
 @dataclass
@@ -24,7 +25,9 @@ class JudgeResult:
     raw_response: str = ""  # Original response if parsing fails
 
 
-def judge(texts: Dict[str, str], platform: str, config: Dict[str, Any]) -> JudgeResult:
+async def judge(
+    texts: Dict[str, str], platform: str, config: Dict[str, Any]
+) -> JudgeResult:
     """
     Score anonymous texts against config criteria.
 
@@ -58,12 +61,20 @@ Score each text (0-100) based on how well it matches the criteria.
 
 Output ONLY valid JSON with keys: A, B, C (scores 0-100), and "ranking" (array, best to worst)."""
 
-    # Create provider and generate
-    provider = create_provider("anthropic")
-    response = provider.generate(prompt)
+    # Get Judge Model from Config (default: anthropic)
+    model_name = config.get("models", {}).get("judge", "anthropic")
+
+    # Create providers (Primary + hardcoded Fallback for now)
+    primary = create_provider(model_name)
+    fallback = create_provider("openai")  # Fallback to OpenAI if Judge fails
+
+    providers = (primary, fallback)
+
+    # Generate with resilience
+    response = await generate_with_resilience(providers, prompt)
 
     # Parse the JSON response
-    return parse_judge_response(response)
+    return parse_judge_response(response.content)
 
 
 def parse_judge_response(response: str) -> JudgeResult:
