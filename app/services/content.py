@@ -96,7 +96,7 @@ async def generate_for_platform(idea: str, platform: str) -> PlatformResult:
                 {
                     "step": "Judge",
                     "content": str(pipeline_result.judge_result.scores),
-                    "model": "judge-model",  # Placeholder or extract from judge_result if available
+                    "model": pipeline_result.judge_result.model_name,
                 },
             ],
         )

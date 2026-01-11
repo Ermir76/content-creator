@@ -22,6 +22,7 @@ class JudgeResult:
 
     ranking: List[str]  # ["A", "C", "B"] - best to worst
     scores: Dict[str, int]  # {"A": 85, "B": 70, "C": 78}
+    model_name: str  # Model used for judging
     raw_response: str = ""  # Original response if parsing fails
 
 
@@ -74,7 +75,10 @@ Output ONLY valid JSON with keys: A, B, C (scores 0-100), and "ranking" (array, 
     response = await generate_with_resilience(providers, prompt)
 
     # Parse the JSON response
-    return parse_judge_response(response.content)
+    result = parse_judge_response(response.content)
+    # Add the actual model used
+    result.model_name = response.model_name
+    return result
 
 
 def parse_judge_response(response: str) -> JudgeResult:
@@ -99,10 +103,12 @@ def parse_judge_response(response: str) -> JudgeResult:
             if not ranking:
                 ranking = sorted(scores.keys(), key=lambda x: scores[x], reverse=True)
 
-            return JudgeResult(ranking=ranking, scores=scores)
+            return JudgeResult(ranking=ranking, scores=scores, model_name="unknown")
 
     except (json.JSONDecodeError, ValueError, KeyError):
         pass
 
     # Parsing failed - return empty result with raw response for debugging
-    return JudgeResult(ranking=[], scores={}, raw_response=response)
+    return JudgeResult(
+        ranking=[], scores={}, model_name="unknown", raw_response=response
+    )
