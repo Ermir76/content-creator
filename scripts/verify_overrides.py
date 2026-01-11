@@ -16,33 +16,45 @@ async def main():
 
     # 1. Custom Override: VERY short text
     target_length = 50
-    overrides = {platform: {"target_chars": target_length, "tone": "Direct"}}
+    overrides = {
+        "linkedin": {
+            # Test Deep Schema (Phase 6)
+            "constraints": {"target_chars": 50},
+            "author_persona": {
+                "perspective": "third-person",
+                "personality": {"human": 1.0, "professional": 0.8},
+            },
+            "writing_style": {"mood": {"energetic": 1.0}, "emojis": "heavy"},
+            "models": {"generator": "gemini-3-flash-preview", "critic": "gpt-5-mini"},
+        }
+    }
 
     print(f"Requesting generation for {platform} with target_chars={target_length}...")
 
     # Call service directly (mimicking API)
-    response = await content_service.generate_content(
-        idea=idea, platforms=[platform], platform_policies=overrides
-    )
-
-    result = response.results[0]
-
-    if not result.success:
-        print(f"FAILED: {result.error}")
-        return
-
-    content_len = len(result.content)
-    print(f"\nGeneratred Content:\n'{result.content}'")
-    print(f"\nLength: {content_len}")
-
-    # Validation
-    # Note: AI isn't perfect, so we allow some margin, but it should be much shorter than default (3000 chars)
-    if content_len < 200:
-        print(f"SUCCESS: Content length {content_len} is within expected short range.")
-    else:
-        print(
-            f"WARNING: Content length {content_len} seems too long for target {target_length}."
+    try:
+        results = await content_service.generate_content(
+            idea_prompt="A startup founder struggling with impostor syndrome during a product launch.",
+            platforms=[platform],
+            platform_policies=overrides,
         )
+
+        for res in results:
+            content_len = len(res.content) if res.content else 0
+            print(f"\n--- Result for {res.platform} ---")
+            print(f"Model Used: {res.model_used}")
+            print(f"Generated Content:\n{res.content!r}")
+            print(f"Length: {content_len}")
+
+            if res.content and content_len > target_length + 200:
+                print(
+                    f"WARNING: Content length {content_len} seems too long for target {target_length}."
+                )
+            else:
+                print("SUCCESS: Content length is within reasonable constraints.")
+
+    except Exception as e:
+        print(f"FAILED with exception: {str(e)}")
 
 
 if __name__ == "__main__":

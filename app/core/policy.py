@@ -73,14 +73,17 @@ def _apply_runtime_overrides(config: Dict, overrides: Any) -> Dict:
         overrides_dict = overrides
 
     # Map overrides to config structure
+
+    # 1. Deep Merge the full overrides object (New System)
+    # This allows overriding constraints, author_persona, writing_style, etc.
+    config = deep_merge(config, overrides_dict)
+
+    # 2. Legacy Support (Old API)
+    # If the user sent top-level 'target_chars', map it to constraints
     if "target_chars" in overrides_dict and overrides_dict["target_chars"]:
         if "constraints" not in config:
             config["constraints"] = {}
         config["constraints"]["target_chars"] = overrides_dict["target_chars"]
-
-    if "tone" in overrides_dict and overrides_dict["tone"]:
-        # Logic for mapping tone strings to style weights could go here
-        pass
 
     return config
 
