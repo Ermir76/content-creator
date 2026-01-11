@@ -1,65 +1,143 @@
+export interface Constraints {
+    char_limit?: number;
+    target_chars?: number;
+    hashtags?: number;
+}
+
+export interface PersonalityConfig {
+    human?: number;
+    professional?: number;
+    friendly?: number;
+    vulnerable?: number;
+    provocative?: number;
+    opinionated?: number;
+}
+
+export interface AuthenticityConfig {
+    honest?: number;
+    polished?: number;
+    raw?: number;
+}
+
+export interface AuthorPersona {
+    perspective?: string;
+    personality?: PersonalityConfig;
+    authenticity?: AuthenticityConfig;
+    corporate?: boolean;
+}
+
+export interface StyleWeights {
+    direct?: number;
+    indirect?: number;
+    casual?: number;
+}
+
+export interface MoodWeights {
+    reflective?: number;
+    energetic?: number;
+    serious?: number;
+    inspiring?: number;
+    urgent?: number;
+    calm?: number;
+    defiant?: number;
+    curious?: number;
+}
+
+export interface ApproachWeights {
+    direct?: number;
+    storytelling?: number;
+    educational?: number;
+}
+
+export interface HumorConfig {
+    enabled?: boolean;
+    intensity?: number;
+    types?: Record<string, number>;
+}
+
+export interface WritingStyle {
+    style?: StyleWeights;
+    mood?: MoodWeights;
+    approach?: ApproachWeights;
+    humor?: HumorConfig;
+    short_paragraphs?: boolean;
+    emojis?: string; // none, low, mild, heavy
+}
+
+export interface HookWeights {
+    punchy?: number;
+    question?: number;
+    statistic?: number;
+    story?: number;
+    bold_claim?: number;
+    contrarian?: number;
+    confession?: number;
+    pain_point?: number;
+}
+
+export interface BodyTexture {
+    examples?: number;
+    data?: number;
+    analogy?: number;
+    dialogue?: number;
+    tension?: number;
+}
+
+export interface BodyConfig {
+    type?: string;
+    texture?: BodyTexture;
+}
+
+export interface EndingWeights {
+    one_question?: number;
+    call_to_action?: number;
+    statement?: number;
+    cliffhanger?: number;
+    callback?: number;
+    challenge?: number;
+}
+
+export interface FormatConfig {
+    hook?: HookWeights;
+    body?: BodyConfig;
+    ending?: EndingWeights;
+}
+
+export interface ModelRouting {
+    default?: string;
+    pipeline?: Record<string, string>;
+}
+
 /**
- * Policy override types for per-platform content customization.
- * Matches the backend PolicyOverride Pydantic model.
+ * The Full Policy Override Object.
+ * Matches app/models/schemas.py PolicyOverride
  */
-
-export type Tone = 'Professional' | 'Casual' | 'Direct' | 'Storytelling';
-
-export type HookStyle = 'Question' | 'Bold statement' | 'Story' | 'Fact' | 'Anti-pattern';
-
-export type CTAStrength = 'None' | 'Soft' | 'Medium' | 'Strong';
-
-export type Feature = 'hashtags' | 'emojis' | 'questions' | 'short_paragraphs';
-
 export interface PolicyOverride {
-    target_chars?: number;  // 500-1500
-    tone?: Tone;
-    features?: Feature[];
+    constraints?: Constraints;
+    author_persona?: AuthorPersona;
+    writing_style?: WritingStyle;
+    format?: FormatConfig;
+    models?: ModelRouting;
+
+    // Legacy simple fields (kept for compatibility if needed)
+    tone?: string;
     voice_profile?: string;
-    hook_style?: HookStyle;
-    cta_strength?: CTAStrength;
 }
 
 export interface PlatformPolicies {
     [platform: string]: PolicyOverride;
 }
 
-// Default policy values
-export const DEFAULT_POLICY: PolicyOverride = {
-    target_chars: 700,
-    tone: 'Professional',
-    features: [],
-    voice_profile: '',
-    hook_style: 'Question',
-    cta_strength: 'Soft',
-};
-
-// UI labels for display
-export const TONE_OPTIONS: { value: Tone; label: string }[] = [
-    { value: 'Professional', label: 'Professional' },
-    { value: 'Casual', label: 'Casual' },
-    { value: 'Direct', label: 'Direct' },
-    { value: 'Storytelling', label: 'Storytelling' },
+// UI Helpers (Labels)
+export const EMOJI_OPTIONS = [
+    { value: 'none', label: 'None' },
+    { value: 'low', label: 'Low' },
+    { value: 'mild', label: 'Mild' },
+    { value: 'heavy', label: 'Heavy' },
 ];
 
-export const HOOK_STYLE_OPTIONS: { value: HookStyle; label: string }[] = [
-    { value: 'Question', label: 'Question' },
-    { value: 'Bold statement', label: 'Bold Statement' },
-    { value: 'Story', label: 'Story' },
-    { value: 'Fact', label: 'Fact' },
-    { value: 'Anti-pattern', label: 'Anti-pattern' },
-];
-
-export const CTA_STRENGTH_OPTIONS: { value: CTAStrength; label: string }[] = [
-    { value: 'None', label: 'None' },
-    { value: 'Soft', label: 'Soft' },
-    { value: 'Medium', label: 'Medium' },
-    { value: 'Strong', label: 'Strong' },
-];
-
-export const FEATURE_OPTIONS: { value: Feature; label: string }[] = [
-    { value: 'hashtags', label: 'Hashtags' },
-    { value: 'emojis', label: 'Emojis' },
-    { value: 'questions', label: 'Questions' },
-    { value: 'short_paragraphs', label: 'Short Paragraphs' },
+export const PERSPECTIVE_OPTIONS = [
+    { value: 'first-person', label: 'First Person (I)' },
+    { value: 'second-person', label: 'Second Person (You)' },
+    { value: 'third-person', label: 'Third Person (They)' },
 ];

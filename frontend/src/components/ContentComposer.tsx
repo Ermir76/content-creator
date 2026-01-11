@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Loader2, Briefcase, MessageSquare, Camera, Sparkles, ThumbsUp, Music, ChevronDown, ChevronUp, Settings2 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { LucideIcon } from 'lucide-react';
-import { PolicyControls } from './PolicyControls';
+import { PolicyEditor } from './policy/PolicyEditor';
 import type { PolicyOverride, PlatformPolicies } from '@/types/policy';
 
 interface Platform {
@@ -154,8 +154,8 @@ export function ContentComposer({ onGenerate, isLoading }: ContentComposerProps)
                   <div
                     key={platform.id}
                     className={`rounded-lg border transition-all ${isSelected
-                        ? 'border-blue-300 dark:border-blue-700 bg-blue-50/50 dark:bg-blue-900/20'
-                        : 'hover:bg-accent'
+                      ? 'border-blue-300 dark:border-blue-700 bg-blue-50/50 dark:bg-blue-900/20'
+                      : 'hover:bg-accent'
                       }`}
                   >
                     {/* Platform Header */}
@@ -198,9 +198,9 @@ export function ContentComposer({ onGenerate, isLoading }: ContentComposerProps)
                     {/* Collapsible Policy Controls */}
                     {isSelected && isExpanded && (
                       <div className="px-3 pb-3 animate-in slide-in-from-top-2 duration-200">
-                        <PolicyControls
+                        <PolicyEditor
                           policy={platformPolicies[platform.id] || {}}
-                          onChange={(policy) => handlePolicyChange(platform.id, policy)}
+                          onChange={(policy: PolicyOverride) => handlePolicyChange(platform.id, policy)}
                           disabled={isLoading}
                         />
                       </div>
