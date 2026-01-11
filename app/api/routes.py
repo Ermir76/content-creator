@@ -16,8 +16,18 @@ from app.services.content import (
     reset_circuit_breaker,
 )
 from app.repositories import content_repo
+from app.core.platform_defaults import get_platform_policy
 
 router = APIRouter()
+
+
+@router.get("/platforms", tags=["System"])
+async def get_platform_limits():
+    """
+    Get hard limits/defaults for all supported platforms.
+    """
+    platforms = ["linkedin", "twitter", "reddit", "instagram", "facebook", "tiktok"]
+    return {p: get_platform_policy(p) for p in platforms}
 
 
 @router.get("/", tags=["Health"])
@@ -37,35 +47,7 @@ async def generate_content(
     """
     Generate platform-specific content using AI models.
     """
-    # Validation Logic (Moved from main.py)
-    if request.platform_policies:
-        valid_tones = ["Professional", "Casual", "Direct", "Storytelling"]
-        valid_hooks = ["Question", "Bold statement", "Story", "Fact", "Anti-pattern"]
-        valid_cta = ["None", "Soft", "Medium", "Strong"]
-
-        for platform, policy in request.platform_policies.items():
-            if policy.target_chars is not None and not (
-                500 <= policy.target_chars <= 1500
-            ):
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"target_chars for {platform} must be between 500 and 1500",
-                )
-            if policy.tone is not None and policy.tone not in valid_tones:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"tone for {platform} must be one of: {valid_tones}",
-                )
-            if policy.hook_style is not None and policy.hook_style not in valid_hooks:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"hook_style for {platform} must be one of: {valid_hooks}",
-                )
-            if policy.cta_strength is not None and policy.cta_strength not in valid_cta:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"cta_strength for {platform} must be one of: {valid_cta}",
-                )
+    # Logic delegated to Service Layer (orchestrate.py / content.py) which uses config.yaml logic
 
     return generate_multi_platform_content(
         idea=request.idea_prompt, platforms=request.platforms

@@ -1,37 +1,60 @@
-from typing import Dict, Any, List
+"""
+PLATFORM_DEFAULTS.PY
+The "Physics" of the social networks.
+Contains hard limits (max characters) and default models.
+
+These are the SOURCE OF TRUTH for constraints.
+"""
+
+from typing import Dict, Any
 
 
 def get_platform_policy(platform: str) -> Dict[str, Any]:
     """
-    Get default policy for a platform.
+    Get hard limits for a platform.
     """
     defaults = {
+        # LinkedIn
         "linkedin": {
             "char_limit": 3000,
-            "target_chars": 1500,
-            "tone": "professional",
-            "features": ["hashtags"],
+            "primary_model": "gemini",
         },
+        # Twitter/X
         "twitter": {
             "char_limit": 280,
-            "target_chars": 200,
-            "tone": "casual",
-            "features": [],
+            "primary_model": "xai",
         },
+        # Reddit
         "reddit": {
-            "char_limit": 4000,
-            "target_chars": 1000,
-            "tone": "direct",
-            "features": [],
+            "char_limit": 40000,
+            "primary_model": "gemini",
+        },
+        # Instagram
+        "instagram": {
+            "char_limit": 2200,
+            "max_hashtags": 30,  # Instagram Hard Limit
+            "primary_model": "openai",
+        },
+        # Facebook
+        "facebook": {
+            "char_limit": 63206,
+            "primary_model": "gemini",
+        },
+        # TikTok
+        "tiktok": {
+            "char_limit": 2200,
+            "primary_model": "openai",
         },
     }
-    return defaults.get(platform.lower(), {})
+
+    return defaults.get(
+        platform.lower(),
+        {
+            "char_limit": 1000,  # Fallback
+        },
+    )
 
 
-def merge_policies(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Merge base policy with overrides.
-    """
-    merged = base.copy()
-    merged.update(override or {})
-    return merged
+def merge_policies(base: Dict, override: Dict) -> Dict:
+    """Helper to merge two policy dicts."""
+    return {**base, **override}

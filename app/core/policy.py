@@ -1,10 +1,13 @@
 """
 POLICY_LOADER.PY - Reads config.yaml and converts weights to natural language prompts.
+Handles hierarchical merging: Defaults -> Platform -> Overrides -> Hard Limits.
 """
 
 import yaml
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, Optional
+
+from app.core.platform_defaults import get_platform_policy
 
 
 def weight_to_word(weight: float) -> str:
@@ -40,8 +43,102 @@ def load_config(config_path: str = None) -> Dict[str, Any]:
     if config_path is None:
         config_path = Path(__file__).parent / "config.yaml"
 
-    with open(config_path, "r", encoding="utf-8") as f:
-        return yaml.safe_load(f)
+    try:
+        with open(config_path, "r", encoding="utf-8") as f:
+            return yaml.safe_load(f)
+    except FileNotFoundError:
+        return {"defaults": {}}
+
+
+def deep_merge(base: Dict, override: Dict) -> Dict:
+    """Recursively merge dictionary overrides into base."""
+    merged = base.copy()
+    for key, value in override.items():
+        if isinstance(value, dict) and key in merged and isinstance(merged[key], dict):
+            merged[key] = deep_merge(merged[key], value)
+        else:
+            merged[key] = value
+    return merged
+
+
+def _apply_runtime_overrides(config: Dict, overrides: Any) -> Dict:
+    """Apply runtime request overrides (clean logic extraction)."""
+    if not overrides:
+        return config
+
+    # Check if overrides is a Pydantic object or dict
+    if hasattr(overrides, "dict"):
+        overrides_dict = overrides.dict(exclude_unset=True)
+    else:
+        overrides_dict = overrides
+
+    # Map overrides to config structure
+    if "target_chars" in overrides_dict and overrides_dict["target_chars"]:
+        if "constraints" not in config:
+            config["constraints"] = {}
+        config["constraints"]["target_chars"] = overrides_dict["target_chars"]
+
+    if "tone" in overrides_dict and overrides_dict["tone"]:
+        # Logic for mapping tone strings to style weights could go here
+        pass
+
+    return config
+
+
+def _enforce_hard_limits(config: Dict, platform: str) -> Dict:
+    """Enforce platform hard limits (The Physics)."""
+    hard_limits = get_platform_policy(platform)
+    char_limit = hard_limits.get("char_limit", 1000)
+
+    constraints = config.get("constraints", {})
+
+    # 1. Cap target_chars
+    current_target = constraints.get("target_chars", 500)
+    if current_target > char_limit:
+        constraints["target_chars"] = char_limit
+
+    # 2. Set strict char limit
+    constraints["char_limit"] = char_limit
+
+    # 3. Cap hashtags
+    max_tags = hard_limits.get("max_hashtags")
+    if max_tags is not None:
+        current_tags = constraints.get("hashtags", 0)
+        if current_tags > max_tags:
+            constraints["hashtags"] = max_tags
+
+    config["constraints"] = constraints
+    return config
+
+
+def get_merged_config(
+    platform: str, overrides: Optional[Dict] = None
+) -> Dict[str, Any]:
+    """
+    Get the final configuration for a specific platform request.
+    Hierarchy:
+    1. Global Defaults (config.yaml)
+    2. Platform Config (config.yaml -> platforms -> [platform])
+    3. Request Overrides (runtime)
+    4. Hard Limits (platform_defaults.py)
+    """
+    full_config = load_config()
+
+    # 1. Start with Global Defaults
+    final_config = full_config.get("defaults", {}).copy()
+
+    # 2. Merge Platform Specific Config
+    platform_config = full_config.get("platforms", {}).get(platform.lower(), {})
+    if platform_config:
+        final_config = deep_merge(final_config, platform_config)
+
+    # 3. Apply Runtime Overrides
+    final_config = _apply_runtime_overrides(final_config, overrides)
+
+    # 4. Enforce Hard Limits
+    final_config = _enforce_hard_limits(final_config, platform)
+
+    return final_config
 
 
 def build_constraints_prompt(config: Dict) -> str:
@@ -51,11 +148,11 @@ def build_constraints_prompt(config: Dict) -> str:
 
     char_limit = constraints.get("char_limit", 0)
     if char_limit > 0:
-        parts.append(f"Maximum {char_limit} characters")
+        parts.append(f"Maximum {char_limit} characters (Strict Limit)")
 
     target_chars = constraints.get("target_chars", 0)
     if target_chars > 0:
-        parts.append(f"Target around {target_chars} characters")
+        parts.append(f"Target length around {target_chars} characters")
 
     hashtags = constraints.get("hashtags", 0)
     if hashtags > 0:
@@ -184,7 +281,7 @@ def build_prompt_instructions(config: Dict[str, Any]) -> str:
     Build complete prompt instructions from config dict.
 
     Args:
-        config: Configuration dictionary (from load_config())
+        config: Configuration dictionary (usually from get_merged_config())
 
     Returns:
         A single string ready to inject into an AI prompt.
