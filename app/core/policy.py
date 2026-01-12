@@ -38,14 +38,32 @@ def build_weighted_list(weights: Dict[str, float]) -> list[str]:
     return result
 
 
+# Global cache for configuration
+_CONFIG_CACHE = {}
+
+
 def load_config(config_path: str = None) -> Dict[str, Any]:
-    """Load the YAML config file."""
+    """Load the YAML config file (Cached)."""
     if config_path is None:
-        config_path = Path(__file__).parent / "config.yaml"
+        path_obj = Path(__file__).parent / "config.yaml"
+    else:
+        path_obj = Path(config_path)
+
+    # Use absolute string path as cache key to prevent duplicates
+    try:
+        abs_path = str(path_obj.resolve())
+    except OSError:
+        # Fallback if path is invalid (e.g. strict mock)
+        abs_path = str(path_obj)
+
+    if abs_path in _CONFIG_CACHE:
+        return _CONFIG_CACHE[abs_path]
 
     try:
-        with open(config_path, "r", encoding="utf-8") as f:
-            return yaml.safe_load(f)
+        with open(abs_path, "r", encoding="utf-8") as f:
+            config = yaml.safe_load(f)
+            _CONFIG_CACHE[abs_path] = config
+            return config
     except FileNotFoundError:
         return {"defaults": {}}
 
@@ -66,8 +84,12 @@ def _apply_runtime_overrides(config: Dict, overrides: Any) -> Dict:
     if not overrides:
         return config
 
-    # Check if overrides is a Pydantic object or dict
-    if hasattr(overrides, "dict"):
+    # Check if overrides is a Pydantic object (Handle v1 and v2)
+    if hasattr(overrides, "model_dump"):
+        # Pydantic v2
+        overrides_dict = overrides.model_dump(exclude_unset=True)
+    elif hasattr(overrides, "dict"):
+        # Pydantic v1
         overrides_dict = overrides.dict(exclude_unset=True)
     else:
         overrides_dict = overrides

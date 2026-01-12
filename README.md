@@ -10,7 +10,7 @@ An AI-powered application that generates platform-specific social media content 
 
 ## Features
 
-- **Multi-AI Content Generation** - Uses 4 AI models (Gemini, GPT-5, Claude, Grok) with automatic fallback
+- **Multi-AI Content Generation** - Uses 4 AI providers (Gemini, OpenAI, Claude, X.AI) with automatic fallback
 - **Platform-Specific Optimization** - Tailored content for 6 platforms: LinkedIn, Twitter, Reddit, Instagram, Facebook, TikTok
 - **Smart Model Routing** - Each platform uses the best-suited AI model as primary
 - **Circuit Breaker Pattern** - Automatic failure detection and recovery
@@ -26,21 +26,21 @@ An AI-powered application that generates platform-specific social media content 
 
 | Provider | Model | Used For |
 |----------|-------|----------|
-| **Google** | `gemini-3-flash` | Instagram (primary), Fallback for LinkedIn/Reddit |
-| **OpenAI** | `gpt-5-mini` | LinkedIn/Facebook (primary), Fallback for Twitter/TikTok |
-| **Anthropic** | `claude-haiku-4-5` | Reddit (primary) - Natural conversation |
-| **X.AI** | `grok-4-1-fast-reasoning` | Twitter/TikTok (primary) - Punchy content |
+| **Google** | `gemini-3-flash` | LinkedIn, Reddit, Facebook (primary) |
+| **OpenAI** | `gpt-5-mini` | Instagram, TikTok (primary) |
+| **Anthropic** | `claude-haiku-4-5` | Judge stage only |
+| **X.AI** | `grok-4-1-fast-reasoning` | Twitter (primary) |
 
 ### Platform → Model Routing
 
-| Platform | Primary Model | Fallback Model |
-|----------|---------------|----------------|
-| LinkedIn | GPT-5 | Gemini |
-| Twitter | Grok | GPT-5 |
-| Reddit | Claude | Gemini |
-| Instagram | Gemini | GPT-5 |
-| Facebook | GPT-5 | Gemini |
-| TikTok | Grok | GPT-5 |
+| Platform | Primary | Fallback |
+|----------|---------|----------|
+| LinkedIn | Gemini | OpenAI |
+| Twitter | X.AI | OpenAI |
+| Reddit | Gemini | OpenAI |
+| Instagram | OpenAI | Gemini |
+| Facebook | Gemini | OpenAI |
+| TikTok | OpenAI | Gemini |
 
 ## Tech Stack
 
@@ -164,24 +164,30 @@ Frontend will be available at: `http://localhost:5173`
 ```
 content-creator/
 ├── app/                          # Backend application
-│   ├── config/                   # Platform policies & routing
-│   │   └── platform_policies.py
-│   ├── database/                 # Database configuration
-│   │   └── database.py
+│   ├── core/                     # Core utilities
+│   │   ├── platform_defaults.py # Platform policies & hard limits
+│   │   ├── policy.py            # Policy merging logic
+│   │   └── database.py          # Database configuration
 │   ├── models/                   # SQLAlchemy & Pydantic models
 │   │   ├── models.py
+│   │   ├── schemas.py
+│   │   ├── provider.py
 │   │   └── response_models.py
 │   ├── services/                 # Business logic
-│   │   ├── ai_provider.py       # Sends requests to OpenAI/Gemini/Claude/Grok APIs
-│   │   ├── content_generator.py # Entry point: receives request, loops platforms, returns results
-│   │   ├── agentic_flow.py      # LinkedIn special: runs Drafter→Challenger→Synthesizer→Judge
-│   │   ├── circuit_breaker.py   # Tracks API failures, stops calling broken APIs
-│   │   ├── model_router.py      # Decides: LinkedIn=GPT, Twitter=Grok, etc.
-│   │   ├── prompt_adapter.py    # ⚠️ BUILDS THE TEXT sent to AI (edit to add hook_style, cta)
-│   │   ├── output_validator.py  # Checks if AI output is valid (not empty, within limits)
-│   │   ├── retry_handler.py     # If AI fails, wait and try again
-│   │   └── quality_logger.py    # Logs which AI was used, success/fail stats
-│   └── main.py                   # API routes: /content/generate, /content/save, etc.
+│   │   ├── orchestrate.py       # Orchestrates 4-step pipeline (Generator→Critic→Improver→Judge)
+│   │   ├── content.py           # Content generation service
+│   │   ├── model_router.py      # Decides: LinkedIn=Gemini, Twitter=X.AI, etc.
+│   │   └── pipeline/            # Pipeline stages
+│   │       ├── generator.py     # Step 1: Creates initial draft
+│   │       ├── critic.py        # Step 2: Reviews and critiques
+│   │       ├── improver.py      # Step 3: Refines based on critique
+│   │       └── judge.py         # Step 4: Selects best version
+│   ├── providers/                # AI provider integrations
+│   │   └── ai_provider.py       # OpenAI, Gemini, Claude, X.AI clients
+│   ├── utils/                    # Utilities
+│   │   ├── resilience.py        # Circuit breaker & retry logic
+│   │   └── validation.py        # Output validation
+│   └── main.py                   # API routes: /content/generate, etc.
 ├── alembic/                      # Database migrations
 ├── frontend/                     # React application
 │   ├── src/
@@ -253,7 +259,7 @@ content-creator/
                           │
                           ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│   app/services/content_generator.py                                          │
+│   app/services/content.py                                          │
 │   ├── generate_content() - loops through each platform                       │
 │   ├── For each platform, extracts that platform's policy:                    │
 │   │   policy_override = platform_policies["linkedin"]                        │
@@ -265,7 +271,7 @@ content-creator/
                           │
                           ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│   app/services/agentic_flow.py                                               │
+│   app/services/orchestrate.py                                               │
 │   ├── generate_flow() receives policy_override                               │
 │   ├── Gets default policy: get_platform_policy("linkedin")                   │
 │   ├── MERGES with user overrides: merge_policies(default, override)          │
@@ -273,39 +279,37 @@ content-creator/
 │   │                                                                          │
 │   └── Runs 4-step pipeline:                                                  │
 │       │                                                                      │
-│       ├── STEP 1: DRAFTER (GPT-5)                                            │
-│       │   └── Calls: PromptAdapter.adapt_prompt(idea, platform, policy)      │
+│       ├── STEP 1: GENERATOR                                                  │
+│       │   └── Creates initial draft                                          │
 │       │                                                                      │
-│       ├── STEP 2: CHALLENGER (Gemini)                                        │
-│       │   └── Calls: PromptAdapter.challenger_prompt(draft, policy)          │
+│       ├── STEP 2: CRITIC                                                     │
+│       │   └── Reviews and critiques the draft                                │
 │       │                                                                      │
-│       ├── STEP 3: SYNTHESIZER (GPT-5)                                        │
-│       │   └── Calls: PromptAdapter.synthesizer_prompt(drafts, policy)        │
+│       ├── STEP 3: IMPROVER                                                   │
+│       │   └── Refines based on critique                                      │
 │       │                                                                      │
 │       └── STEP 4: JUDGE (Claude)                                             │
-│           └── Calls: PromptAdapter.judge_prompt(drafts)                      │
+│           └── Selects best version                                           │
 └─────────────────────────│────────────────────────────────────────────────────┘
                           │
                           ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│   app/services/prompt_adapter.py   ⚠️ THE PROMPTS ARE HERE!                  │
-│   ├── adapt_prompt() - Creates the actual text sent to AI                    │
-│   │   └── Currently uses: char_limit, target_chars, tone, features, voice    │
+│   app/services/pipeline/*.py       ⚠️ THE PROMPTS ARE HERE!                  │
+│   app/core/policy.py                 build_prompt_instructions()            │
+│   │                                                                          │
+│   ├── generator.py - Creates initial draft prompt                            │
+│   │   └── Uses build_prompt_instructions() from policy.py                    │
+│   │   └── Currently uses: char_limit, tone, features, voice                  │
 │   │   └── ❌ MISSING: hook_style, cta_strength                               │
 │   │                                                                          │
-│   ├── challenger_prompt() - Prompt for Gemini critique                       │
-│   │   └── Uses: tone, features, target_chars                                 │
-│   │                                                                          │
-│   ├── synthesizer_prompt() - Prompt for final merge                          │
-│   │   └── Uses: format_style, target_chars                                   │
-│   │                                                                          │
-│   └── judge_prompt() - Prompt for Claude to pick winner                      │
-│       └── Uses: platform only                                                │
+│   ├── critic.py - Reviews and critiques the draft                            │
+│   ├── improver.py - Refines based on critique                                │
+│   └── judge.py - Selects best version (uses Claude)                          │
 └─────────────────────────────────────────────────────────────────────────────┘
                           │
                           ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│   app/config/platform_policies.py                                            │
+│   app/core/platform_defaults.py                                            │
 │   ├── PLATFORM_POLICIES - Default settings for each platform                 │
 │   │   Example for LinkedIn:                                                  │
 │   │   {                                                                      │
@@ -331,13 +335,14 @@ content-creator/
 | File | Purpose | When To Edit |
 |------|---------|--------------|
 | **main.py** | API endpoints, request validation | Add new API routes, change validation rules |
-| **config/platform_policies.py** | Default policies per platform, `merge_policies()` | Change default char limits, tones, features |
-| **services/agentic_flow.py** | 4-step AI pipeline (Drafter→Challenger→Synthesizer→Judge) | Change which AI runs each step |
-| **services/prompt_adapter.py** | ⚠️ **THE PROMPT TEXT** sent to AI models | **EDIT THIS to make AI use hook_style, cta_strength** |
-| **services/content_generator.py** | Orchestrates generation, retry logic | Change retry behavior, model fallback |
-| **services/ai_provider.py** | Calls to OpenAI, Gemini, Claude, Grok APIs | Change AI model versions, API parameters |
-| **services/model_router.py** | Which AI model to use per platform | Change LinkedIn→GPT-5, Twitter→Grok etc. |
-| **services/circuit_breaker.py** | Detects when AI models fail | Change failure thresholds |
+| **core/platform_defaults.py** | Default policies per platform, `merge_policies()` | Change default char limits, tones, features |
+| **services/orchestrate.py** | 4-step AI pipeline (Generator→Critic→Improver→Judge) | Orchestrates content generation |
+| **services/pipeline/*.py** | Prompt templates for each pipeline stage | Edit prompts in generator.py, critic.py, improver.py, judge.py |
+| **core/policy.py** | Policy merging & prompt instructions | Edit build_prompt_instructions() to add hook_style, cta_strength |
+| **services/content.py** | Orchestrates generation, retry logic | Change retry behavior, model fallback |
+| **providers/ai_provider.py** | Calls to OpenAI, Gemini, Claude, X.AI APIs | Change AI model versions, API parameters |
+| **services/model_router.py** | Which AI model to use per platform | Change LinkedIn→Gemini, Twitter→X.AI etc. |
+| **utils/resilience.py** | Circuit breaker & retry logic | Change failure thresholds, retry config |
 
 ### Frontend Files (frontend/src/)
 
@@ -362,18 +367,18 @@ content-creator/
 - ❌ hook_style → Merged but NOT in prompt text
 - ❌ cta_strength → Merged but NOT in prompt text
 
-**To Fix:** Edit `app/services/prompt_adapter.py` and add hook_style and cta_strength to the prompt templates.
+**To Fix:** Edit `app/core/policy.py` (build_prompt_instructions function) to include hook_style and cta_strength in the generated prompt instructions.
 
 ## Platform Specifications
 
 | Platform | Character Limit | Tone | Primary AI |
 |----------|----------------|------|------------|
-| **LinkedIn** | 3,000 | Professional & thought-provoking | GPT-5 |
-| **Twitter** | 280 | Concise & engaging | Grok |
-| **Reddit** | 3,000 | Conversational & authentic | Claude |
-| **Instagram** | 2,200 | Visual & inspiring | Gemini |
-| **Facebook** | 3,000 | Casual-professional | GPT-5 |
-| **TikTok** | 2,200 | Energetic & trendy | Grok |
+| **LinkedIn** | 3,000 | Professional & thought-provoking | Gemini |
+| **Twitter** | 280 | Concise & engaging | X.AI |
+| **Reddit** | 40,000 | Conversational & authentic | Gemini |
+| **Instagram** | 2,200 | Visual & inspiring | OpenAI |
+| **Facebook** | 63,206 | Casual-professional | Gemini |
+| **TikTok** | 2,200 | Energetic & trendy | OpenAI |
 
 ## API Endpoints
 
@@ -486,4 +491,4 @@ This project is for educational and personal use.
 
 ---
 
-Built with FastAPI, React, and Multi-AI Architecture (Gemini, GPT-5, Claude, Grok)
+Built with FastAPI, React, and Multi-AI Architecture (Gemini, OpenAI, Claude, X.AI)
