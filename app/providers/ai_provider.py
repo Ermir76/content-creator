@@ -1,11 +1,16 @@
 import time
 import os
+import asyncio
+import logging
 from abc import ABC, abstractmethod
-
+from typing import Tuple, Optional
 
 from dotenv import load_dotenv
 
 from app.models.provider import ProviderResponse, ProviderMetrics
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 # Optional Third-Party Imports
 try:
@@ -28,20 +33,76 @@ load_dotenv()
 
 
 class AIProvider(ABC):
-    """Abstract base class for AI content generation providers."""
+    """
+    Abstract base class for AI providers using the Template Method pattern.
+    Handles common logic (logging, timing, execution safety).
+    """
+
+    @property
+    @abstractmethod
+    def provider_name(self) -> str:
+        """Return the provider name (e.g., 'openai')."""
+        pass
+
+    @property
+    @abstractmethod
+    def default_model(self) -> str:
+        """Return the default model ID."""
+        pass
 
     @abstractmethod
+    async def _generate_raw(self, prompt: str, model: str) -> Tuple[str, int, int]:
+        """
+        Internal implementation of the generation call.
+        Args:
+            prompt: User prompt
+            model: Model ID to use
+        Returns:
+            Tuple(content_str, input_tokens, output_tokens)
+        """
+        pass
+
     async def generate(self, prompt: str, model: str = None) -> ProviderResponse:
         """
-        Generate content based on the given prompt.
-        Must return a ProviderResponse object.
+        Public generation method.
+        Handles logging, timing, timeouts, and error handling.
         """
-        pass
+        target_model = model or self.default_model
+        logger.info(
+            f"{self.provider_name.title()}: Generating content with model {target_model}"
+        )
 
-    @abstractmethod
+        start_time = time.time()
+        try:
+            # Global timeout for all providers for reliability
+            content, in_tokens, out_tokens = await asyncio.wait_for(
+                self._generate_raw(prompt, target_model), timeout=60.0
+            )
+
+        except asyncio.TimeoutError:
+            logger.error(f"{self.provider_name.title()} request timed out")
+            raise TimeoutError(
+                f"{self.provider_name.title()} API request timed out after 60 seconds"
+            )
+        except Exception as e:
+            logger.error(f"{self.provider_name.title()} request failed: {e}")
+            raise
+
+        latency = (time.time() - start_time) * 1000
+
+        return ProviderResponse(
+            content=content.strip(),
+            metrics=ProviderMetrics(
+                input_tokens=in_tokens,
+                output_tokens=out_tokens,
+                latency_ms=latency,
+            ),
+            provider_name=self.provider_name,
+            model_name=target_model,
+        )
+
     def get_name(self) -> str:
-        """Return the provider name."""
-        pass
+        return self.provider_name
 
 
 class GeminiProvider(AIProvider):
@@ -58,20 +119,22 @@ class GeminiProvider(AIProvider):
             raise ValueError("GEMINI_API_KEY environment variable is not set")
 
         genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel("gemini-3-flash-preview")
+        self.default_model_inst = genai.GenerativeModel("gemini-3-flash-preview")
 
-    async def generate(self, prompt: str, model: str = None) -> ProviderResponse:
-        """Generate content using Gemini."""
-        active_model = self.model
-        target_model_name = model or "gemini-3-flash-preview"
+    @property
+    def provider_name(self) -> str:
+        return "gemini"
 
-        if model:
+    @property
+    def default_model(self) -> str:
+        return "gemini-3-flash-preview"
+
+    async def _generate_raw(self, prompt: str, model: str) -> Tuple[str, int, int]:
+        active_model = self.default_model_inst
+        if model and model != self.default_model:
             active_model = genai.GenerativeModel(model)
 
-        start_time = time.time()
-        # Gemini Async Call
         response = await active_model.generate_content_async(prompt)
-        latency = (time.time() - start_time) * 1000
 
         # Extract metrics safely
         input_tokens = 0
@@ -80,19 +143,7 @@ class GeminiProvider(AIProvider):
             input_tokens = response.usage_metadata.prompt_token_count
             output_tokens = response.usage_metadata.candidates_token_count
 
-        return ProviderResponse(
-            content=response.text.strip(),
-            metrics=ProviderMetrics(
-                input_tokens=input_tokens,
-                output_tokens=output_tokens,
-                latency_ms=latency,
-            ),
-            provider_name="gemini",
-            model_name=target_model_name,
-        )
-
-    def get_name(self) -> str:
-        return "gemini"
+        return response.text, input_tokens, output_tokens
 
 
 class OpenAIProvider(AIProvider):
@@ -110,39 +161,29 @@ class OpenAIProvider(AIProvider):
             self.client = AsyncOpenAI(api_key=api_key)
             self._has_key = True
 
-    async def generate(self, prompt: str, model: str = None) -> ProviderResponse:
-        """Generate content using OpenAI."""
+    @property
+    def provider_name(self) -> str:
+        return "openai"
+
+    @property
+    def default_model(self) -> str:
+        return "gpt-5-mini"
+
+    async def _generate_raw(self, prompt: str, model: str) -> Tuple[str, int, int]:
         if not self._has_key or not self.client:
             raise ValueError("OPENAI_API_KEY not configured")
 
-        target_model = model or "gpt-5-mini"
-
-        start_time = time.time()
         response = await self.client.chat.completions.create(
-            model=target_model,
+            model=model,
             messages=[{"role": "user", "content": prompt}],
         )
-        latency = (time.time() - start_time) * 1000
 
-        # Extract metrics
         usage = response.usage
         input_tokens = usage.prompt_tokens if usage else 0
         output_tokens = usage.completion_tokens if usage else 0
         content = response.choices[0].message.content or ""
 
-        return ProviderResponse(
-            content=content.strip(),
-            metrics=ProviderMetrics(
-                input_tokens=input_tokens,
-                output_tokens=output_tokens,
-                latency_ms=latency,
-            ),
-            provider_name="openai",
-            model_name=target_model,
-        )
-
-    def get_name(self) -> str:
-        return "openai"
+        return content, input_tokens, output_tokens
 
 
 class AnthropicProvider(AIProvider):
@@ -162,42 +203,28 @@ class AnthropicProvider(AIProvider):
             self.client = AsyncAnthropic(api_key=api_key)
             self._has_key = True
 
-    async def generate(self, prompt: str, model: str = None) -> ProviderResponse:
-        """Generate content using Claude (Sync wrapped in Async)."""
+    @property
+    def provider_name(self) -> str:
+        return "anthropic"
+
+    @property
+    def default_model(self) -> str:
+        return "claude-haiku-4-5"
+
+    async def _generate_raw(self, prompt: str, model: str) -> Tuple[str, int, int]:
         if not self._has_key or not self.client:
             raise ValueError("ANTHROPIC_API_KEY not configured")
 
-        target_model = model or "claude-haiku-4-5"
-
-        start_time = time.time()
         message = await self.client.messages.create(
-            model=target_model,
+            model=model,
             max_tokens=1024,
             messages=[{"role": "user", "content": prompt}],
         )
-        latency = (time.time() - start_time) * 1000
 
-        # Get text from first content block
         content_block = message.content[0]
         text = getattr(content_block, "text", str(content_block))
 
-        # Approximate metrics (Claude usage is in response.usage)
-        input_tokens = message.usage.input_tokens
-        output_tokens = message.usage.output_tokens
-
-        return ProviderResponse(
-            content=text.strip(),
-            metrics=ProviderMetrics(
-                input_tokens=input_tokens,
-                output_tokens=output_tokens,
-                latency_ms=latency,
-            ),
-            provider_name="anthropic",
-            model_name=target_model,
-        )
-
-    def get_name(self) -> str:
-        return "anthropic"
+        return text, message.usage.input_tokens, message.usage.output_tokens
 
 
 class XAIProvider(AIProvider):
@@ -212,39 +239,30 @@ class XAIProvider(AIProvider):
             self.client = None
             self._has_key = False
         else:
-            # Grok uses OpenAI-compatible API (Async)
             self.client = AsyncOpenAI(api_key=api_key, base_url="https://api.x.ai/v1")
             self._has_key = True
 
-    async def generate(self, prompt: str, model: str = None) -> ProviderResponse:
-        """Generate content using Grok."""
+    @property
+    def provider_name(self) -> str:
+        return "xai"
+
+    @property
+    def default_model(self) -> str:
+        return "grok-4-1-fast-reasoning"
+
+    async def _generate_raw(self, prompt: str, model: str) -> Tuple[str, int, int]:
         if not self._has_key or not self.client:
             raise ValueError("GROK_API_KEY not configured")
 
-        target_model = model or "grok-4-1-fast-reasoning"
-
-        start_time = time.time()
         response = await self.client.chat.completions.create(
-            model=target_model,
+            model=model,
             messages=[{"role": "user", "content": prompt}],
             temperature=0.7,
             max_tokens=1000,
         )
-        latency = (time.time() - start_time) * 1000
 
-        return ProviderResponse(
-            content=(response.choices[0].message.content or "").strip(),
-            metrics=ProviderMetrics(
-                input_tokens=response.usage.prompt_tokens,
-                output_tokens=response.usage.completion_tokens,
-                latency_ms=latency,
-            ),
-            provider_name="xai",
-            model_name=target_model,
-        )
-
-    def get_name(self) -> str:
-        return "xai"
+        content = response.choices[0].message.content or ""
+        return content, response.usage.prompt_tokens, response.usage.completion_tokens
 
 
 def create_provider(model_name: str) -> AIProvider:
