@@ -4,6 +4,7 @@ from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, T
 from sqlalchemy.orm import relationship
 
 from app.core.database import Base
+from app.models.user_preferences import UserPreference
 
 
 class User(Base):
@@ -15,6 +16,9 @@ class User(Base):
 
     # Relationship to generated content
     generated_contents = relationship("GeneratedContent", back_populates="user")
+
+    # Relationship to preferences
+    preferences = relationship("UserPreference", back_populates="user", uselist=False)
 
     def __repr__(self):
         return f"<User(id={self.id}, email={self.email})>"

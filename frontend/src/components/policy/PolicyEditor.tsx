@@ -11,11 +11,12 @@ interface PolicyEditorProps {
     policy: PolicyOverride;
     onChange: (policy: PolicyOverride) => void;
     disabled?: boolean;
+    platform?: string;
 }
 
 type Tab = 'persona' | 'style' | 'format' | 'models';
 
-export function PolicyEditor({ policy, onChange, disabled }: PolicyEditorProps) {
+export function PolicyEditor({ policy, onChange, disabled, platform }: PolicyEditorProps) {
     const [activeTab, setActiveTab] = useState<Tab>('persona');
 
     const handleTabChange = (tab: Tab) => {
@@ -75,8 +76,11 @@ export function PolicyEditor({ policy, onChange, disabled }: PolicyEditorProps) 
                 {activeTab === 'format' && (
                     <FormatTab
                         data={policy.format || {}}
+                        constraints={policy.constraints || {}}
                         onChange={(newFormat) => onChange({ ...policy, format: newFormat })}
+                        onConstraintsChange={(newConstraints) => onChange({ ...policy, constraints: newConstraints })}
                         disabled={disabled}
+                        platform={platform}
                     />
                 )}
                 {activeTab === 'models' && (
@@ -95,6 +99,7 @@ export function PolicyEditor({ policy, onChange, disabled }: PolicyEditorProps) 
 function TabButton({ active, onClick, icon, label, disabled }: any) {
     return (
         <Button
+            type="button"
             variant="ghost"
             onClick={onClick}
             disabled={disabled}

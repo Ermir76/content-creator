@@ -52,5 +52,5 @@ If one version is clearly better, use it. Don't blend for the sake of blending.
 Output ONLY the final post. No commentary."""
 
     # Resilience & Routing
-    providers = ModelRouter.select_model(platform)
+    providers = ModelRouter.select_model(platform, overrides=config)
     return await generate_with_resilience(providers, prompt)

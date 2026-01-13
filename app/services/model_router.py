@@ -10,12 +10,15 @@ class ModelRouter:
     """Routes platform requests to appropriate AI models."""
 
     @staticmethod
-    def select_model(platform: str) -> Tuple[AIProvider, AIProvider]:
+    def select_model(
+        platform: str, overrides: dict = None
+    ) -> Tuple[AIProvider, AIProvider]:
         """
         Select primary and fallback AI models for a given platform.
 
         Args:
             platform: Platform name (e.g., 'linkedin', 'twitter')
+            overrides: Optional configuration overrides (user selection)
 
         Returns:
             Tuple of (primary_provider, fallback_provider)
@@ -26,6 +29,16 @@ class ModelRouter:
         # Get platform policy
         policy = get_platform_policy(platform)
         primary_name = policy.get("primary_model", "gemini")
+
+        # 1. Check for overrides (User preference)
+        # overrides structure might be deep merged config or raw overrides
+        # We look for models -> default
+        if overrides:
+            models_config = overrides.get("models", {})
+            if models_config and isinstance(models_config, dict):
+                override_default = models_config.get("default")
+                if override_default:
+                    primary_name = override_default
 
         # Determine fallback dynamically if not set
         fallback_name = policy.get("fallback_model")

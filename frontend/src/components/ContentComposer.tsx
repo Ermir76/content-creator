@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -9,6 +9,8 @@ import { toast } from 'sonner';
 import type { LucideIcon } from 'lucide-react';
 import { PolicyEditor } from './policy/PolicyEditor';
 import type { PolicyOverride, PlatformPolicies } from '@/types/policy';
+import { contentApi } from '@/services/contentApi';
+import { useDebounce } from '@/hooks/useDebounce';
 
 interface Platform {
   id: string;
@@ -36,6 +38,47 @@ export function ContentComposer({ onGenerate, isLoading }: ContentComposerProps)
   const [expandedPlatforms, setExpandedPlatforms] = useState<string[]>([]);
   const [platformPolicies, setPlatformPolicies] = useState<PlatformPolicies>({});
   const [showValidation, setShowValidation] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // Debounce values for auto-saving
+  const debouncedIdea = useDebounce(ideaPrompt, 1000);
+  const debouncedPlatforms = useDebounce(selectedPlatforms, 1000);
+  const debouncedPolicies = useDebounce(platformPolicies, 1000);
+  const debouncedExpanded = useDebounce(expandedPlatforms, 1000);
+
+  // Load preferences on mount
+  useEffect(() => {
+    async function loadPreferences() {
+      try {
+        const prefs = await contentApi.getPreferences();
+        if (prefs) {
+          if (prefs.last_idea_prompt) setIdeaPrompt(prefs.last_idea_prompt);
+          if (prefs.last_platform_selection) setSelectedPlatforms(JSON.parse(prefs.last_platform_selection));
+          if (prefs.last_policies) setPlatformPolicies(JSON.parse(prefs.last_policies));
+          if (prefs.last_expanded_platforms) setExpandedPlatforms(JSON.parse(prefs.last_expanded_platforms));
+        }
+      } catch (error) {
+        console.error('Failed to load preferences:', error);
+      } finally {
+        setIsLoaded(true);
+      }
+    }
+    loadPreferences();
+  }, []);
+
+  // Save preferences when changed
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    const saveData = {
+      last_idea_prompt: debouncedIdea,
+      last_platform_selection: JSON.stringify(debouncedPlatforms),
+      last_policies: JSON.stringify(debouncedPolicies),
+      last_expanded_platforms: JSON.stringify(debouncedExpanded),
+    };
+
+    contentApi.updatePreferences(saveData).catch(err => console.error('Failed to save preferences:', err));
+  }, [debouncedIdea, debouncedPlatforms, debouncedPolicies, debouncedExpanded, isLoaded]);
 
   const handlePlatformToggle = (platformId: string) => {
     setSelectedPlatforms(prev => {
@@ -202,6 +245,7 @@ export function ContentComposer({ onGenerate, isLoading }: ContentComposerProps)
                           policy={platformPolicies[platform.id] || {}}
                           onChange={(policy: PolicyOverride) => handlePolicyChange(platform.id, policy)}
                           disabled={isLoading}
+                          platform={platform.id}
                         />
                       </div>
                     )}

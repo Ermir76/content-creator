@@ -76,7 +76,7 @@ class AIProvider(ABC):
         try:
             # Global timeout for all providers for reliability
             content, in_tokens, out_tokens = await asyncio.wait_for(
-                self._generate_raw(prompt, target_model), timeout=60.0
+                self._generate_raw(prompt, target_model), timeout=120.0
             )
 
         except asyncio.TimeoutError:

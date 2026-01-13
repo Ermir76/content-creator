@@ -43,8 +43,8 @@ Just the actual post text, ready to publish.
 Generate the post now:"""
 
     # Routing & Resilience Logic
-    # Get Primary + Fallback providers from Router
-    providers = ModelRouter.select_model(platform)
+    # Get Primary + Fallback providers from Router (with overrides)
+    providers = ModelRouter.select_model(platform, overrides=config)
 
     # Execute with resilience (Handles loops, retries, and circuit breaker)
     from app.utils.resilience import generate_with_resilience

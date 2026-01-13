@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from app.core.database import Base, engine
 from app.core.exceptions import ContentCreatorException
 from app.api.routes import router as api_router
+from app.api.preferences import router as preferences_router
 
 load_dotenv()
 
@@ -40,3 +41,4 @@ async def content_creator_exception_handler(
 
 # Include the API Router
 app.include_router(api_router)
+app.include_router(preferences_router)
