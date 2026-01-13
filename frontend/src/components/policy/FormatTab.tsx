@@ -1,6 +1,9 @@
 import { Label } from '@/components/ui/label';
+import { useEffect, useState } from 'react';
+import { contentApi } from '@/services/contentApi';
 import type {
     FormatConfig,
+    Constraints,
     HookWeights,
     BodyTexture,
     EndingWeights
@@ -8,15 +11,34 @@ import type {
 
 interface FormatTabProps {
     data: FormatConfig;
+    constraints: Constraints;
     onChange: (data: FormatConfig) => void;
+    onConstraintsChange: (data: Constraints) => void;
     disabled?: boolean;
+    platform?: string;
 }
 
-export function FormatTab({ data, onChange, disabled }: FormatTabProps) {
+export function FormatTab({ data, constraints, onChange, onConstraintsChange, disabled, platform }: FormatTabProps) {
     const hook = data.hook || {};
     const body = data.body || {};
     const texture = body.texture || {};
     const ending = data.ending || {};
+
+    const [platformLimit, setPlatformLimit] = useState<number>(2000);
+
+    useEffect(() => {
+        if (platform) {
+            contentApi.getPlatformConfig(platform)
+                .then(cfg => {
+                    if (cfg.char_limit) setPlatformLimit(cfg.char_limit);
+                })
+                .catch(err => console.error("Failed to fetch platform config", err));
+        }
+    }, [platform]);
+
+    const handleConstraintChange = (key: keyof Constraints, value: number) => {
+        onConstraintsChange({ ...constraints, [key]: value });
+    };
 
     const handleHookChange = (key: keyof HookWeights, value: number) => {
         onChange({ ...data, hook: { ...hook, [key]: value } });
@@ -44,6 +66,24 @@ export function FormatTab({ data, onChange, disabled }: FormatTabProps) {
 
     return (
         <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
+            {/* Constraints */}
+            <div className="space-y-4">
+                <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Length & Constraints</h4>
+                <div className="grid grid-cols-1 gap-4">
+                    <RangeSliderControl
+                        label="Target Length"
+                        subLabel={`Max: ${platformLimit}`}
+                        value={constraints.target_chars ?? Math.min(500, platformLimit)}
+                        onChange={(v) => handleConstraintChange('target_chars', v)}
+                        min={0}
+                        max={platformLimit}
+                        step={10}
+                        disabled={disabled}
+                    />
+                </div>
+            </div>
+
+            <hr className="border-slate-200 dark:border-slate-700" />
             {/* Hook Strategy */}
             <div className="space-y-4">
                 <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Hook Strategy (Opening)</h4>
@@ -128,10 +168,46 @@ function SliderControl({ label, subLabel, value, onChange, disabled }: {
                     value={value ?? 0}
                     onChange={(e) => onChange(parseFloat(e.target.value))}
                     disabled={disabled}
-                    className="flex-1 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                    className="flex-1 cursor-pointer accent-blue-500"
                 />
                 <span className="text-xs w-8 text-right font-mono text-slate-500">
                     {(value ?? 0).toFixed(1)}
+                </span>
+            </div>
+        </div>
+    );
+}
+
+// Generic Range Slider Helper
+function RangeSliderControl({ label, subLabel, value, onChange, min, max, step, disabled }: {
+    label: string,
+    subLabel?: string,
+    value?: number,
+    onChange: (val: number) => void,
+    min: number,
+    max: number,
+    step: number,
+    disabled?: boolean
+}) {
+    return (
+        <div className="space-y-2">
+            <div className="flex justify-between items-baseline">
+                <Label className="text-xs font-medium">{label}</Label>
+                {subLabel && <span className="text-[10px] text-slate-400">{subLabel}</span>}
+            </div>
+            <div className="flex items-center gap-3">
+                <input
+                    type="range"
+                    min={min}
+                    max={max}
+                    step={step}
+                    value={value ?? min}
+                    onChange={(e) => onChange(parseFloat(e.target.value))}
+                    disabled={disabled}
+                    className="flex-1 cursor-pointer accent-blue-500"
+                />
+                <span className="text-xs w-12 text-right font-mono text-slate-500">
+                    {value}
                 </span>
             </div>
         </div>

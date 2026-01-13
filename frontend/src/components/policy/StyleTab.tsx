@@ -4,6 +4,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import type {
     WritingStyle,
     StyleWeights,
+    ApproachWeights,
     MoodWeights,
     HumorConfig
 } from '@/types/policy';
@@ -17,12 +18,17 @@ interface StyleTabProps {
 
 export function StyleTab({ data, onChange, disabled }: StyleTabProps) {
     const style = data.style || {};
+    const approach = data.approach || {};
     const mood = data.mood || {};
     const humor = data.humor || {};
     const humorTypes = humor.types || {};
 
     const handleStyleChange = (key: keyof StyleWeights, value: number) => {
         onChange({ ...data, style: { ...style, [key]: value } });
+    };
+
+    const handleApproachChange = (key: keyof ApproachWeights, value: number) => {
+        onChange({ ...data, approach: { ...approach, [key]: value } });
     };
 
     const handleMoodChange = (key: keyof MoodWeights, value: number) => {
@@ -65,6 +71,40 @@ export function StyleTab({ data, onChange, disabled }: StyleTabProps) {
                         subLabel="Formal ↔ Chatty"
                         value={style.casual}
                         onChange={(v) => handleStyleChange('casual', v)}
+                        disabled={disabled}
+                    />
+                    <SliderControl
+                        label="Indirect"
+                        subLabel="Direct ↔ Indirect"
+                        value={style.indirect}
+                        onChange={(v) => handleStyleChange('indirect', v)}
+                        disabled={disabled}
+                    />
+                </div>
+            </div>
+
+            <hr className="border-slate-200 dark:border-slate-700" />
+
+            {/* Approach */}
+            <div className="space-y-4">
+                <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Approach Strategy</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <SliderControl
+                        label="Direct"
+                        value={approach.direct}
+                        onChange={(v) => handleApproachChange('direct', v)}
+                        disabled={disabled}
+                    />
+                    <SliderControl
+                        label="Storytelling"
+                        value={approach.storytelling}
+                        onChange={(v) => handleApproachChange('storytelling', v)}
+                        disabled={disabled}
+                    />
+                    <SliderControl
+                        label="Educational"
+                        value={approach.educational}
+                        onChange={(v) => handleApproachChange('educational', v)}
                         disabled={disabled}
                     />
                 </div>
@@ -185,7 +225,7 @@ function SliderControl({ label, subLabel, value, onChange, disabled }: {
                     value={value ?? 0}
                     onChange={(e) => onChange(parseFloat(e.target.value))}
                     disabled={disabled}
-                    className="flex-1 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                    className="flex-1 cursor-pointer accent-blue-500"
                 />
                 <span className="text-xs w-8 text-right font-mono text-slate-500">
                     {(value ?? 0).toFixed(1)}

@@ -50,4 +50,45 @@ export const contentApi = {
         });
         return response.data;
     },
+
+    /**
+     * Get user preferences
+     */
+    async getPreferences(): Promise<UserPreferenceResponse> {
+        const response = await axios.get<UserPreferenceResponse>('/preferences/');
+        return response.data;
+    },
+
+    /**
+     * Update user preferences
+     */
+    async updatePreferences(data: UserPreferenceUpdate): Promise<UserPreferenceResponse> {
+        const response = await axios.post<UserPreferenceResponse>('/preferences/', data);
+        return response.data;
+    },
+
+    /**
+     * Get platform defaults
+     */
+    async getPlatformConfig(platform: string): Promise<{ char_limit: number, max_hashtags?: number }> {
+        const response = await axios.get<{ char_limit: number, max_hashtags?: number }>(`/preferences/platform/${platform}`);
+        return response.data;
+    },
 };
+
+export interface UserPreferenceUpdate {
+    last_idea_prompt?: string;
+    last_platform_selection?: string; // JSON
+    last_policies?: string; // JSON
+    last_expanded_platforms?: string; // JSON
+}
+
+export interface UserPreferenceResponse {
+    id: number;
+    user_id: number;
+    last_idea_prompt?: string;
+    last_platform_selection?: string;
+    last_policies?: string;
+    last_expanded_platforms?: string;
+    updated_at: string;
+}

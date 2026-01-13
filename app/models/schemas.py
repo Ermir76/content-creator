@@ -183,3 +183,26 @@ class ContentUpdateRequest(BaseModel):
     """Request model for updating content text."""
 
     content_text: str
+
+
+# --- User Preferences Schemas ---
+
+
+class UserPreferenceUpdate(BaseModel):
+    last_idea_prompt: Optional[str] = None
+    last_platform_selection: Optional[str] = None  # JSON string
+    last_policies: Optional[str] = None  # JSON string
+    last_expanded_platforms: Optional[str] = None  # JSON string
+
+
+class UserPreferenceResponse(BaseModel):
+    id: int
+    user_id: int
+    last_idea_prompt: Optional[str] = None
+    last_platform_selection: Optional[str] = None
+    last_policies: Optional[str] = None
+    last_expanded_platforms: Optional[str] = None
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
