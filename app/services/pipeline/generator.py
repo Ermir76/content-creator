@@ -7,8 +7,22 @@ Does NOT load config - receives it from orchestrate.py.
 
 from typing import Dict, Any
 from app.core.policy import build_prompt_instructions
-from app.services.model_router import ModelRouter
+from app.providers.ai_provider import create_provider
 from app.models.provider import ProviderResponse
+
+
+def _get_pipeline_model(config: Dict[str, Any], stage: str) -> str:
+    """Get user's model choice for a pipeline stage, with fallback to default."""
+    models = config.get("models", {})
+    pipeline = models.get("pipeline", {})
+    
+    # User's choice for this stage
+    stage_model = pipeline.get(stage)
+    if stage_model:
+        return stage_model
+    
+    # Fallback to default model
+    return models.get("default", "gemini")
 
 
 async def generate(
@@ -42,11 +56,15 @@ Just the actual post text, ready to publish.
 
 Generate the post now:"""
 
-    # Routing & Resilience Logic
-    # Get Primary + Fallback providers from Router (with overrides)
-    providers = ModelRouter.select_model(platform, overrides=config)
+    # Get user's model choice for generator stage
+    model_name = _get_pipeline_model(config, "generator")
+    fallback_name = "openai" if model_name == "gemini" else "gemini"
+    
+    primary = create_provider(model_name)
+    fallback = create_provider(fallback_name)
+    providers = (primary, fallback)
 
-    # Execute with resilience (Handles loops, retries, and circuit breaker)
+    # Execute with resilience
     from app.utils.resilience import generate_with_resilience
 
     return await generate_with_resilience(providers, prompt)
