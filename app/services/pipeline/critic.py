@@ -7,9 +7,19 @@ Does NOT load config - receives it from orchestrate.py.
 
 from typing import Dict, Any
 from app.core.policy import build_prompt_instructions
-from app.services.model_router import ModelRouter
+from app.providers.ai_provider import create_provider
 from app.utils.resilience import generate_with_resilience
 from app.models.provider import ProviderResponse
+
+
+def _get_pipeline_model(config: Dict[str, Any], stage: str) -> str:
+    """Get user's model choice for a pipeline stage, with fallback to default."""
+    models = config.get("models", {})
+    pipeline = models.get("pipeline", {})
+    stage_model = pipeline.get(stage)
+    if stage_model:
+        return stage_model
+    return models.get("default", "gemini")
 
 
 async def critique(v1: str, platform: str, config: Dict[str, Any]) -> ProviderResponse:
@@ -24,10 +34,8 @@ async def critique(v1: str, platform: str, config: Dict[str, Any]) -> ProviderRe
     Returns:
         ProviderResponse: The improved draft (v2) and metrics
     """
-    # Build style instructions from config
     style_instructions = build_prompt_instructions(config)
 
-    # Build the critic prompt
     prompt = f"""You are a Critical Reviewer for {platform}.
 
 CURRENT DRAFT:
@@ -40,6 +48,12 @@ Evaluate the draft against these criteria. If there are weaknesses, rewrite to f
 
 Output ONLY the final post. No commentary."""
 
-    # Resilience & Routing
-    providers = ModelRouter.select_model(platform, overrides=config)
+    # Get user's model choice for critic stage
+    model_name = _get_pipeline_model(config, "critic")
+    fallback_name = "openai" if model_name == "gemini" else "gemini"
+    
+    primary = create_provider(model_name)
+    fallback = create_provider(fallback_name)
+    providers = (primary, fallback)
+
     return await generate_with_resilience(providers, prompt)
