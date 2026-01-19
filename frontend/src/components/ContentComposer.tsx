@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -40,6 +40,9 @@ export function ContentComposer({ onGenerate, isLoading }: ContentComposerProps)
   const [showValidation, setShowValidation] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
 
+  // Baseline snapshot ref - tracks last saved state to prevent unnecessary saves
+  const baselineRef = useRef<string | null>(null);
+
   // Debounce values for auto-saving
   const debouncedIdea = useDebounce(ideaPrompt, 1000);
   const debouncedPlatforms = useDebounce(selectedPlatforms, 1000);
@@ -66,9 +69,31 @@ export function ContentComposer({ onGenerate, isLoading }: ContentComposerProps)
     loadPreferences();
   }, []);
 
-  // Save preferences when changed
+  // Save preferences when changed (with baseline comparison to prevent race conditions)
   useEffect(() => {
     if (!isLoaded) return;
+
+    // Create snapshot of current debounced values
+    const currentSnapshot = JSON.stringify({
+      idea: debouncedIdea,
+      platforms: debouncedPlatforms,
+      policies: debouncedPolicies,
+      expanded: debouncedExpanded,
+    });
+
+    // First run after load: establish baseline, don't save
+    if (baselineRef.current === null) {
+      baselineRef.current = currentSnapshot;
+      return;
+    }
+
+    // If values unchanged from baseline, skip save
+    if (currentSnapshot === baselineRef.current) {
+      return;
+    }
+
+    // Values changed - update baseline and save
+    baselineRef.current = currentSnapshot;
 
     const saveData = {
       last_idea_prompt: debouncedIdea,
