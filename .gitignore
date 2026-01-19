@@ -231,3 +231,9 @@ documents/
 # *.xlsx
 # *.xls
 # data/
+
+# Claude Code
+.claude/
+
+# Extra docs (only README.md should be tracked)
+CODE_REVIEW.md
