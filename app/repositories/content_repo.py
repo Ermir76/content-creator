@@ -49,8 +49,8 @@ def update_content(
     if not content:
         return None
 
-    content.content_text = request.content_text
-    content.char_count = len(request.content_text)
+    content.content_text = request.content_text  # type: ignore
+    content.char_count = len(request.content_text)  # type: ignore
     db.commit()
     db.refresh(content)
     return content

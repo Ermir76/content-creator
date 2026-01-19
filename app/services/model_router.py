@@ -1,6 +1,6 @@
 """Model routing logic for selecting AI providers based on platform."""
 
-from typing import Tuple
+from typing import Tuple, Optional
 from app.core.platform_defaults import get_platform_policy
 from app.providers.ai_provider import AIProvider, create_provider
 from app.utils.resilience import CIRCUIT_BREAKER
@@ -11,7 +11,7 @@ class ModelRouter:
 
     @staticmethod
     def select_model(
-        platform: str, overrides: dict = None
+        platform: str, overrides: Optional[dict] = None
     ) -> Tuple[AIProvider, AIProvider]:
         """
         Select primary and fallback AI models for a given platform.

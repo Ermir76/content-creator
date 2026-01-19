@@ -7,7 +7,7 @@ Does NOT load config - receives it from orchestrate.py.
 
 from typing import Dict, Any
 from app.core.policy import build_prompt_instructions
-from app.providers.ai_provider import create_provider
+from app.providers.ai_provider import create_provider, resolve_model
 from app.utils.resilience import generate_with_resilience
 from app.models.provider import ProviderResponse
 
@@ -60,11 +60,14 @@ If one version is clearly better, use it. Don't blend for the sake of blending.
 Output ONLY the final post. No commentary."""
 
     # Get user's model choice for improver stage
-    model_name = _get_pipeline_model(config, "improver")
-    fallback_name = "openai" if model_name == "gemini" else "gemini"
-    
-    primary = create_provider(model_name)
+    model_id = _get_pipeline_model(config, "improver")
+    provider_name, specific_model = resolve_model(model_id)
+
+    # Set up fallback provider
+    fallback_name = "openai" if provider_name == "gemini" else "gemini"
+
+    primary = create_provider(provider_name)
     fallback = create_provider(fallback_name)
     providers = (primary, fallback)
 
-    return await generate_with_resilience(providers, prompt)
+    return await generate_with_resilience(providers, prompt, specific_model)

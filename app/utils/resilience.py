@@ -176,7 +176,7 @@ CIRCUIT_BREAKER = CircuitBreaker()
 
 
 async def generate_with_resilience(
-    providers: Tuple[object, ...], prompt: str
+    providers: Tuple[object, ...], prompt: str, model: str = None
 ) -> object:
     """
     Execute generation with automatic fallback and circuit breaker updates.
@@ -184,6 +184,7 @@ async def generate_with_resilience(
     Args:
         providers: Tuple of (primary, fallback) providers (AIProvider objects)
         prompt: The prompt to send
+        model: Optional specific model ID to use (e.g., "gpt-5-mini")
 
     Returns:
         ProviderResponse: The result
@@ -193,7 +194,7 @@ async def generate_with_resilience(
     """
     last_exception = None
 
-    for provider in providers:
+    for i, provider in enumerate(providers):
         if not provider:
             continue
 
@@ -202,8 +203,10 @@ async def generate_with_resilience(
             if not CIRCUIT_BREAKER.is_available(provider.get_name()):
                 continue
 
-            # Generate
-            response = await provider.generate(prompt)
+            # Only pass specific model to PRIMARY provider (i=0)
+            # Fallback providers use their own default model
+            model_to_use = model if i == 0 else None
+            response = await provider.generate(prompt, model_to_use)
 
             # Record Success
             CIRCUIT_BREAKER.record_success(provider.get_name())

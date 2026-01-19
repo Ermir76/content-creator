@@ -62,7 +62,7 @@ class AIProvider(ABC):
         """
         pass
 
-    async def generate(self, prompt: str, model: str = None) -> ProviderResponse:
+    async def generate(self, prompt: str, model: Optional[str] = None) -> ProviderResponse:
         """
         Public generation method.
         Handles logging, timing, timeouts, and error handling.
@@ -118,8 +118,8 @@ class GeminiProvider(AIProvider):
         if not api_key:
             raise ValueError("GEMINI_API_KEY environment variable is not set")
 
-        genai.configure(api_key=api_key)
-        self.default_model_inst = genai.GenerativeModel("gemini-3-flash-preview")
+        genai.configure(api_key=api_key)  # type: ignore
+        self.default_model_inst = genai.GenerativeModel("gemini-3-flash-preview")  # type: ignore
 
     @property
     def provider_name(self) -> str:
@@ -132,7 +132,7 @@ class GeminiProvider(AIProvider):
     async def _generate_raw(self, prompt: str, model: str) -> Tuple[str, int, int]:
         active_model = self.default_model_inst
         if model and model != self.default_model:
-            active_model = genai.GenerativeModel(model)
+            active_model = genai.GenerativeModel(model)  # type: ignore
 
         response = await active_model.generate_content_async(prompt)
 
@@ -262,7 +262,35 @@ class XAIProvider(AIProvider):
         )
 
         content = response.choices[0].message.content or ""
-        return content, response.usage.prompt_tokens, response.usage.completion_tokens
+        input_tokens = response.usage.prompt_tokens if response.usage else 0
+        output_tokens = response.usage.completion_tokens if response.usage else 0
+        return content, input_tokens, output_tokens
+
+
+MODEL_REGISTRY = {
+    "gpt-5-mini": ("openai", "gpt-5-mini"),
+    "gemini-3-flash-preview": ("gemini", "gemini-3-flash-preview"),
+    "claude-haiku-4-5": ("anthropic", "claude-haiku-4-5"),
+    "grok-4-1-fast-reasoning": ("xai", "grok-4-1-fast-reasoning"),
+}
+
+
+def resolve_model(model_id: str) -> Tuple[str, Optional[str]]:
+    """
+    Resolve a model ID to (provider_name, model_id).
+    If model_id is already a provider name, return (provider_name, None).
+
+    Args:
+        model_id: Either a specific model ID (e.g., "gpt-5-mini") or provider name (e.g., "openai")
+
+    Returns:
+        Tuple of (provider_name, model_id or None)
+    """
+    if model_id in MODEL_REGISTRY:
+        return MODEL_REGISTRY[model_id]
+
+    # Assume it's a provider name like "openai", "gemini"
+    return (model_id, None)
 
 
 def create_provider(model_name: str) -> AIProvider:

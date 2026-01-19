@@ -26,16 +26,16 @@ def update_preferences(
     prefs = get_preferences(db, user_id)
 
     if update_data.last_idea_prompt is not None:
-        prefs.last_idea_prompt = update_data.last_idea_prompt
+        prefs.last_idea_prompt = update_data.last_idea_prompt  # type: ignore
 
     if update_data.last_platform_selection is not None:
-        prefs.last_platform_selection = update_data.last_platform_selection
+        prefs.last_platform_selection = update_data.last_platform_selection  # type: ignore
 
     if update_data.last_policies is not None:
-        prefs.last_policies = update_data.last_policies
+        prefs.last_policies = update_data.last_policies  # type: ignore
 
     if update_data.last_expanded_platforms is not None:
-        prefs.last_expanded_platforms = update_data.last_expanded_platforms
+        prefs.last_expanded_platforms = update_data.last_expanded_platforms  # type: ignore
 
     db.commit()
     db.refresh(prefs)

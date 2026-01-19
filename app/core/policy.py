@@ -42,7 +42,7 @@ def build_weighted_list(weights: Dict[str, float]) -> list[str]:
 _CONFIG_CACHE = {}
 
 
-def load_config(config_path: str = None) -> Dict[str, Any]:
+def load_config(config_path: Optional[str] = None) -> Dict[str, Any]:
     """Load the YAML config file (Cached)."""
     if config_path is None:
         path_obj = Path(__file__).parent / "config.yaml"
@@ -137,7 +137,7 @@ def _enforce_hard_limits(config: Dict, platform: str) -> Dict:
 
 
 def get_merged_config(
-    platform: str, overrides: Optional[Dict] = None, config_path: str = None
+    platform: str, overrides: Optional[Dict] = None, config_path: Optional[str] = None
 ) -> Dict[str, Any]:
     """
     Get the final configuration for a specific platform request.

@@ -6,7 +6,7 @@ This module coordinates content generation using the new pipeline.
 
 import asyncio
 from typing import Optional, Dict, Any
-from app.models.response_models import GenerationResponse, PlatformResult
+from app.models.response_models import GenerationResponse, PlatformResult, Draft
 from app.services.orchestrate import run_pipeline
 
 
@@ -74,6 +74,17 @@ async def generate_for_platform(
         winner_version = pipeline_result.shuffle_map.get(winner_label, "v1")
         content = versions.get(winner_version, pipeline_result.v1)
 
+        # Format judge results with mapping
+        judge_output_lines = []
+        judge_output_lines.append("SCORES:")
+        for label in ["A", "B", "C"]:
+            score = pipeline_result.judge_result.scores.get(label, 0)
+            version = pipeline_result.shuffle_map.get(label, "unknown")
+            judge_output_lines.append(f"{label}: {version} - Score: {score}")
+
+        judge_output_lines.append(f"\nWINNER: {winner_label} ({winner_version})")
+        judge_content = "\n".join(judge_output_lines)
+
         return PlatformResult(
             platform=platform,
             success=True,
@@ -83,26 +94,26 @@ async def generate_for_platform(
             error_code=None,
             char_count=len(content),
             drafts=[
-                {
-                    "step": "Generator (v1)",
-                    "content": pipeline_result.v1,
-                    "model": pipeline_result.v1_model,
-                },
-                {
-                    "step": "Critic (v2)",
-                    "content": pipeline_result.v2,
-                    "model": pipeline_result.v2_model,
-                },
-                {
-                    "step": "Improver (v3)",
-                    "content": pipeline_result.v3,
-                    "model": pipeline_result.v3_model,
-                },
-                {
-                    "step": "Judge",
-                    "content": str(pipeline_result.judge_result.scores),
-                    "model": pipeline_result.judge_result.model_name,
-                },
+                Draft(
+                    step="Generator (v1)",
+                    content=pipeline_result.v1,
+                    model=pipeline_result.v1_model,
+                ),
+                Draft(
+                    step="Critic (v2)",
+                    content=pipeline_result.v2,
+                    model=pipeline_result.v2_model,
+                ),
+                Draft(
+                    step="Improver (v3)",
+                    content=pipeline_result.v3,
+                    model=pipeline_result.v3_model,
+                ),
+                Draft(
+                    step="Judge",
+                    content=judge_content,
+                    model=pipeline_result.judge_result.model_name,
+                ),
             ],
         )
 

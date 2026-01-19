@@ -12,7 +12,7 @@ Responsibilities:
 """
 
 import random
-from typing import Dict, Tuple, Any
+from typing import Dict, Tuple, Any, Optional
 from dataclasses import dataclass
 from dotenv import load_dotenv
 
@@ -70,8 +70,8 @@ def shuffle_versions(
 async def run_pipeline(
     user_input: str,
     platform: str,
-    config_path: str = None,
-    overrides: Dict[str, Any] = None,
+    config_path: Optional[str] = None,
+    overrides: Optional[Dict[str, Any]] = None,
 ) -> PipelineResult:
     """
     Run the complete content generation pipeline.

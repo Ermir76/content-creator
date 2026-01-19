@@ -11,7 +11,7 @@ Does NOT load config - receives it from orchestrate.py.
 import json
 from typing import Dict, Any, List
 from dataclasses import dataclass
-from app.providers.ai_provider import create_provider
+from app.providers.ai_provider import create_provider, resolve_model
 from app.core.policy import build_prompt_instructions
 from app.utils.resilience import generate_with_resilience
 
@@ -24,6 +24,16 @@ class JudgeResult:
     scores: Dict[str, int]  # {"A": 85, "B": 70, "C": 78}
     model_name: str  # Model used for judging
     raw_response: str = ""  # Original response if parsing fails
+
+
+def _get_pipeline_model(config: Dict[str, Any], stage: str) -> str:
+    """Get user's model choice for a pipeline stage, with fallback to default."""
+    models = config.get("models", {})
+    pipeline = models.get("pipeline", {})
+    stage_model = pipeline.get(stage)
+    if stage_model:
+        return stage_model
+    return models.get("default", "gemini")
 
 
 async def judge(
@@ -62,17 +72,19 @@ Score each text (0-100) based on how well it matches the criteria.
 
 Output ONLY valid JSON with keys: A, B, C (scores 0-100), and "ranking" (array, best to worst)."""
 
-    # Get Judge Model from Config (default: anthropic)
-    model_name = config.get("models", {}).get("judge", "anthropic")
+    # Get user's model choice for judge stage
+    model_id = _get_pipeline_model(config, "judge")
+    provider_name, specific_model = resolve_model(model_id)
 
-    # Create providers (Primary + hardcoded Fallback for now)
-    primary = create_provider(model_name)
-    fallback = create_provider("openai")  # Fallback to OpenAI if Judge fails
+    # Set up fallback provider
+    fallback_name = "openai" if provider_name == "gemini" else "gemini"
 
+    primary = create_provider(provider_name)
+    fallback = create_provider(fallback_name)
     providers = (primary, fallback)
 
     # Generate with resilience
-    response = await generate_with_resilience(providers, prompt)
+    response = await generate_with_resilience(providers, prompt, specific_model)
 
     # Parse the JSON response
     result = parse_judge_response(response.content)
