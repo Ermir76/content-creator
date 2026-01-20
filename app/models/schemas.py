@@ -188,6 +188,24 @@ class ContentUpdateRequest(BaseModel):
 # --- User Preferences Schemas ---
 
 
+class PromptPreviewRequest(BaseModel):
+    """Request model for previewing prompts before generation."""
+    idea_prompt: str
+    platforms: List[str]
+    platform_policies: Optional[Dict[str, PolicyOverride]] = None
+
+
+class PlatformPromptPreview(BaseModel):
+    """Preview of a single platform's prompt."""
+    platform: str
+    prompt: str
+
+
+class PromptPreviewResponse(BaseModel):
+    """Response containing prompt previews for all requested platforms."""
+    previews: List[PlatformPromptPreview]
+
+
 class UserPreferenceUpdate(BaseModel):
     last_idea_prompt: Optional[str] = None
     last_platform_selection: Optional[str] = None  # JSON string

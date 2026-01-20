@@ -50,7 +50,7 @@ async def generate_for_platform(
 
     Args:
         idea: Content idea/prompt
-        platform: Target platform (e.g., 'linkedin', 'twitter')
+        platform: Target platform (e.g., 'linkedin', 'x')
 
     Returns:
         PlatformResult with success/failure status and content

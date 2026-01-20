@@ -9,10 +9,15 @@ from app.models.schemas import (
     ContentSaveRequest,
     GeneratedContentResponse,
     ContentUpdateRequest,
+    PromptPreviewRequest,
+    PromptPreviewResponse,
+    PlatformPromptPreview,
 )
 from app.services import content as content_service
 from app.repositories import content_repo
 from app.core.platform_defaults import get_platform_policy
+from app.core.policy import get_merged_config
+from app.services.pipeline.generator import build_generation_prompt
 from app.utils.resilience import CIRCUIT_BREAKER
 
 router = APIRouter()
@@ -23,7 +28,7 @@ async def get_platform_limits():
     """
     Get hard limits/defaults for all supported platforms.
     """
-    platforms = ["linkedin", "twitter", "reddit", "instagram", "facebook", "tiktok"]
+    platforms = ["linkedin", "x", "reddit", "instagram", "facebook", "tiktok"]
     return {p: get_platform_policy(p) for p in platforms}
 
 
@@ -51,6 +56,34 @@ async def generate_content(
         platforms=request.platforms,
         platform_policies=request.platform_policies,
     )
+
+
+@router.post(
+    "/content/preview-prompt", response_model=PromptPreviewResponse, tags=["Content"]
+)
+async def preview_prompt(request: PromptPreviewRequest):
+    """
+    Preview the prompts that would be sent to AI without generating content.
+    Returns one prompt per selected platform.
+    """
+    previews = []
+
+    for platform in request.platforms:
+        # Get policy overrides for this platform (if any)
+        overrides = None
+        if request.platform_policies and platform in request.platform_policies:
+            policy = request.platform_policies[platform]
+            overrides = policy.model_dump(exclude_none=True) if policy else None
+
+        # Merge config with overrides
+        config = get_merged_config(platform, overrides)
+
+        # Build the prompt
+        prompt = build_generation_prompt(request.idea_prompt, platform, config)
+
+        previews.append(PlatformPromptPreview(platform=platform, prompt=prompt))
+
+    return PromptPreviewResponse(previews=previews)
 
 
 @router.post("/content/save", response_model=GeneratedContentResponse, tags=["Content"])

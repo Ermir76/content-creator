@@ -29,7 +29,7 @@ class GeneratedContent(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     idea_prompt = Column(Text, nullable=False)
-    platform = Column(String, nullable=False)  # e.g., "linkedin", "reddit", "twitter"
+    platform = Column(String, nullable=False)  # e.g., "linkedin", "reddit", "x"
     content_text = Column(Text, nullable=False)
     status = Column(String, default="ready_for_copy", nullable=False)
     created_at = Column(

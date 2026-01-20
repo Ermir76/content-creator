@@ -44,7 +44,7 @@ export interface PlatformResult {
 /**
  * Supported platform types
  */
-export type Platform = 'linkedin' | 'twitter' | 'reddit' | 'instagram' | 'facebook' | 'tiktok';
+export type Platform = 'linkedin' | 'x' | 'reddit' | 'instagram' | 'facebook' | 'tiktok';
 
 /**
  * Date range filter options

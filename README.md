@@ -8,7 +8,7 @@ AI-powered content generation with a 4-stage pipeline: Generator, Critic, Improv
 - **Multi-Provider Support** - Gemini, OpenAI, Anthropic, X.AI
 - **Per-Stage Model Selection** - Choose different models for each pipeline stage
 - **Circuit Breaker** - Automatic failure detection and fallback
-- **Platform Optimization** - LinkedIn, Twitter, Reddit, Instagram, Facebook, TikTok
+- **Platform Optimization** - LinkedIn, X, Reddit, Instagram, Facebook, TikTok
 
 ## Tech Stack
 

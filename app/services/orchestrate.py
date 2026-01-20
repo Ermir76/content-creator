@@ -16,7 +16,7 @@ from typing import Dict, Tuple, Any, Optional
 from dataclasses import dataclass
 from dotenv import load_dotenv
 
-from app.core.policy import get_merged_config
+from app.core.policy import get_merged_config, build_prompt_instructions
 from app.services.pipeline.generator import generate
 from app.services.pipeline.critic import critique
 from app.services.pipeline.improver import improve
@@ -78,7 +78,7 @@ async def run_pipeline(
 
     Args:
         user_input: The user's content/topic/brief
-        platform: Target platform (linkedin, twitter, etc.)
+        platform: Target platform (linkedin, x, etc.)
         config_path: Optional path to config.yaml
 
     Returns:

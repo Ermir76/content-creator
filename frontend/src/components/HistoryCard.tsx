@@ -10,7 +10,7 @@ import type { ContentHistoryItem } from '../types/content';
 
 const PLATFORM_COLORS: Record<string, string> = {
     linkedin: 'bg-blue-600 shadow-blue-600/20',
-    twitter: 'bg-sky-500 shadow-sky-500/20',
+    x: 'bg-sky-500 shadow-sky-500/20',
     reddit: 'bg-orange-600 shadow-orange-600/20',
     instagram: 'bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 shadow-pink-500/20',
     facebook: 'bg-blue-700 shadow-blue-700/20',
@@ -19,7 +19,7 @@ const PLATFORM_COLORS: Record<string, string> = {
 
 const PLATFORM_LABELS: Record<string, string> = {
     linkedin: 'LinkedIn',
-    twitter: 'Twitter',
+    x: 'X',
     reddit: 'Reddit',
     instagram: 'Instagram',
     facebook: 'Facebook',

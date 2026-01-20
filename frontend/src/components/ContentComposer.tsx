@@ -4,12 +4,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Briefcase, MessageSquare, Camera, Sparkles, ThumbsUp, Music, ChevronDown, ChevronUp, Settings2 } from 'lucide-react';
+import { Loader2, Briefcase, MessageSquare, Camera, Sparkles, ThumbsUp, Music, ChevronDown, ChevronUp, Settings2, Eye, X } from 'lucide-react';
 import { toast } from 'sonner';
 import type { LucideIcon } from 'lucide-react';
 import { PolicyEditor } from './policy/PolicyEditor';
 import type { PolicyOverride, PlatformPolicies } from '@/types/policy';
-import { contentApi } from '@/services/contentApi';
+import { contentApi, type PlatformPromptPreview } from '@/services/contentApi';
 import { useDebounce } from '@/hooks/useDebounce';
 
 interface Platform {
@@ -20,7 +20,7 @@ interface Platform {
 
 const PLATFORMS: Platform[] = [
   { id: 'linkedin', name: 'LinkedIn', icon: Briefcase },
-  { id: 'twitter', name: 'Twitter', icon: MessageSquare },
+  { id: 'x', name: 'X', icon: MessageSquare },
   { id: 'reddit', name: 'Reddit', icon: MessageSquare },
   { id: 'instagram', name: 'Instagram', icon: Camera },
   { id: 'facebook', name: 'Facebook', icon: ThumbsUp },
@@ -39,6 +39,8 @@ export function ContentComposer({ onGenerate, isLoading }: ContentComposerProps)
   const [platformPolicies, setPlatformPolicies] = useState<PlatformPolicies>({});
   const [showValidation, setShowValidation] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [promptPreviews, setPromptPreviews] = useState<PlatformPromptPreview[]>([]);
+  const [isLoadingPreview, setIsLoadingPreview] = useState(false);
 
   // Baseline snapshot ref - tracks last saved state to prevent unnecessary saves
   const baselineRef = useRef<string | null>(null);
@@ -56,7 +58,12 @@ export function ContentComposer({ onGenerate, isLoading }: ContentComposerProps)
         const prefs = await contentApi.getPreferences();
         if (prefs) {
           if (prefs.last_idea_prompt) setIdeaPrompt(prefs.last_idea_prompt);
-          if (prefs.last_platform_selection) setSelectedPlatforms(JSON.parse(prefs.last_platform_selection));
+          if (prefs.last_platform_selection) {
+            const saved = JSON.parse(prefs.last_platform_selection);
+            // Filter out stale platforms (like 'twitter' if we renamed to 'x')
+            const valid = saved.filter((id: string) => PLATFORMS.some(p => p.id === id));
+            setSelectedPlatforms(valid);
+          }
           if (prefs.last_policies) setPlatformPolicies(JSON.parse(prefs.last_policies));
           if (prefs.last_expanded_platforms) setExpandedPlatforms(JSON.parse(prefs.last_expanded_platforms));
         }
@@ -134,16 +141,13 @@ export function ContentComposer({ onGenerate, isLoading }: ContentComposerProps)
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // Validation
+  const validateInputs = (): boolean => {
     if (!ideaPrompt.trim()) {
       setShowValidation(true);
       toast.error('Missing idea', {
         description: 'Please enter an idea for your post'
       });
-      return;
+      return false;
     }
 
     if (selectedPlatforms.length === 0) {
@@ -151,20 +155,46 @@ export function ContentComposer({ onGenerate, isLoading }: ContentComposerProps)
       toast.error('No platform selected', {
         description: 'Please select at least one platform'
       });
-      return;
+      return false;
     }
 
     setShowValidation(false);
+    return true;
+  };
 
-    // Only send policies for selected platforms that have custom settings
+  const getActivePolicies = (): PlatformPolicies => {
     const activePolicies: PlatformPolicies = {};
     for (const platformId of selectedPlatforms) {
       if (platformPolicies[platformId] && Object.keys(platformPolicies[platformId]).length > 0) {
         activePolicies[platformId] = platformPolicies[platformId];
       }
     }
+    return activePolicies;
+  };
 
-    onGenerate(ideaPrompt, selectedPlatforms, activePolicies);
+  const handlePreviewPrompt = async () => {
+    if (!validateInputs()) return;
+
+    setIsLoadingPreview(true);
+    try {
+      const response = await contentApi.previewPrompt({
+        idea_prompt: ideaPrompt,
+        platforms: selectedPlatforms,
+        platform_policies: getActivePolicies(),
+      });
+      setPromptPreviews(response.previews);
+    } catch (error) {
+      console.error('Failed to preview prompt:', error);
+      toast.error('Failed to preview prompt');
+    } finally {
+      setIsLoadingPreview(false);
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateInputs()) return;
+    onGenerate(ideaPrompt, selectedPlatforms, getActivePolicies());
   };
 
   return (
@@ -283,24 +313,74 @@ export function ContentComposer({ onGenerate, isLoading }: ContentComposerProps)
             )}
           </div>
 
-          {/* Generate Button */}
-          <Button
-            type="submit"
-            className="w-full text-lg py-6"
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                Generating Content...
-              </>
-            ) : (
-              <>
-                <Sparkles className="mr-2 h-5 w-5" />
-                Generate Content
-              </>
-            )}
-          </Button>
+          {/* Action Buttons */}
+          <div className="flex gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1 text-lg py-6"
+              disabled={isLoading || isLoadingPreview}
+              onClick={handlePreviewPrompt}
+            >
+              {isLoadingPreview ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Loading...
+                </>
+              ) : (
+                <>
+                  <Eye className="mr-2 h-5 w-5" />
+                  Preview Prompt
+                </>
+              )}
+            </Button>
+            <Button
+              type="submit"
+              className="flex-1 text-lg py-6"
+              disabled={isLoading || isLoadingPreview}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="mr-2 h-5 w-5" />
+                  Generate Content
+                </>
+              )}
+            </Button>
+          </div>
+
+          {/* Prompt Preview Section */}
+          {promptPreviews.length > 0 && (
+            <div className="space-y-4 animate-in slide-in-from-top-2 duration-300">
+              <div className="flex items-center justify-between">
+                <Label className="text-base font-semibold">Prompt Preview</Label>
+                <button
+                  type="button"
+                  onClick={() => setPromptPreviews([])}
+                  className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              {promptPreviews.map((preview) => (
+                <div
+                  key={preview.platform}
+                  className="rounded-lg border bg-slate-50 dark:bg-slate-900 p-4 space-y-2"
+                >
+                  <div className="font-medium text-sm text-blue-600 dark:text-blue-400 uppercase tracking-wide">
+                    {preview.platform}
+                  </div>
+                  <pre className="text-sm whitespace-pre-wrap font-mono text-slate-700 dark:text-slate-300 max-h-64 overflow-y-auto">
+                    {preview.prompt}
+                  </pre>
+                </div>
+              ))}
+            </div>
+          )}
         </form>
       </CardContent>
     </Card>

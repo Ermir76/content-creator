@@ -15,35 +15,33 @@ def _get_pipeline_model(config: Dict[str, Any], stage: str) -> str:
     """Get user's model choice for a pipeline stage, with fallback to default."""
     models = config.get("models", {})
     pipeline = models.get("pipeline", {})
-    
+
     # User's choice for this stage
     stage_model = pipeline.get(stage)
     if stage_model:
         return stage_model
-    
+
     # Fallback to default model
     return models.get("default", "gemini")
 
 
-async def generate(
+def build_generation_prompt(
     user_input: str, platform: str, config: Dict[str, Any]
-) -> ProviderResponse:
+) -> str:
     """
-    Generate initial draft (v1) from idea and config.
+    Build the complete prompt for content generation.
 
     Args:
         user_input: Content/topic/brief from user
-        platform: Target platform (linkedin, twitter, etc.)
-        config: Configuration dict (loaded by orchestrate.py)
+        platform: Target platform (linkedin, x, etc.)
+        config: Configuration dict
 
     Returns:
-        ProviderResponse: The generated content and metrics
+        The complete prompt string ready for AI
     """
-    # Build prompt instructions from config weights
     style_instructions = build_prompt_instructions(config)
 
-    # Build the full prompt
-    prompt = f"""You are a content creator for {platform}.
+    return f"""You are a content creator for {platform}.
 
 INPUT:
 {user_input}
@@ -55,6 +53,23 @@ Write ONLY the post content. No meta-commentary, no explanations, no "Here's the
 Just the actual post text, ready to publish.
 
 Generate the post now:"""
+
+
+async def generate(
+    user_input: str, platform: str, config: Dict[str, Any]
+) -> ProviderResponse:
+    """
+    Generate initial draft (v1) from idea and config.
+
+    Args:
+        user_input: Content/topic/brief from user
+        platform: Target platform (linkedin, x, etc.)
+        config: Configuration dict (loaded by orchestrate.py)
+
+    Returns:
+        ProviderResponse: The generated content and metrics
+    """
+    prompt = build_generation_prompt(user_input, platform, config)
 
     # Get user's model choice for generator stage
     model_id = _get_pipeline_model(config, "generator")

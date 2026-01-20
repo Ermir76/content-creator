@@ -19,8 +19,8 @@ def get_platform_policy(platform: str) -> Dict[str, Any]:
             "char_limit": 3000,
             "primary_model": "gemini",
         },
-        # Twitter/X
-        "twitter": {
+        # X
+        "x": {
             "char_limit": 280,
             "primary_model": "xai",
         },

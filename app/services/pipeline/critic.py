@@ -28,7 +28,7 @@ async def critique(v1: str, platform: str, config: Dict[str, Any]) -> ProviderRe
 
     Args:
         v1: The initial draft from generator
-        platform: Target platform (linkedin, twitter, etc.)
+        platform: Target platform (linkedin, x, etc.)
         config: Configuration dict (loaded by orchestrate.py)
 
     Returns:

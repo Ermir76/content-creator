@@ -17,7 +17,7 @@ class ModelRouter:
         Select primary and fallback AI models for a given platform.
 
         Args:
-            platform: Platform name (e.g., 'linkedin', 'twitter')
+            platform: Platform name (e.g., 'linkedin', 'x')
             overrides: Optional configuration overrides (user selection)
 
         Returns:

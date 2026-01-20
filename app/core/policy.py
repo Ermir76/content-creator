@@ -169,25 +169,12 @@ def get_merged_config(
 def build_constraints_prompt(config: Dict) -> str:
     """Build prompt section for constraints."""
     constraints = config.get("constraints", {})
-    parts = []
-
-    char_limit = constraints.get("char_limit", 0)
-    if char_limit > 0:
-        parts.append(f"Maximum {char_limit} characters (Strict Limit)")
 
     target_chars = constraints.get("target_chars", 0)
     if target_chars > 0:
-        parts.append(
-            f"STRICT REQUIREMENT: Total length must be very close to {target_chars} characters. Do not exceed significantly"
-        )
+        return f"STRICT REQUIREMENT: Total length must be very close to {target_chars} characters. Do not exceed significantly"
 
-    hashtags = constraints.get("hashtags", 0)
-    if hashtags > 0:
-        parts.append(f"Include {hashtags} hashtags")
-    elif hashtags == 0:
-        parts.append("No hashtags")
-
-    return "CONSTRAINTS: " + ". ".join(parts) + "." if parts else ""
+    return ""
 
 
 def build_author_persona_prompt(config: Dict) -> str:

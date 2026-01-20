@@ -4,7 +4,7 @@ import type { Platform, DateRange, ContentFilters } from '../types/content';
 const PLATFORMS: { value: Platform | 'all'; label: string }[] = [
     { value: 'all', label: 'All Platforms' },
     { value: 'linkedin', label: 'LinkedIn' },
-    { value: 'twitter', label: 'Twitter' },
+    { value: 'x', label: 'X' },
     { value: 'reddit', label: 'Reddit' },
     { value: 'instagram', label: 'Instagram' },
     { value: 'facebook', label: 'Facebook' },

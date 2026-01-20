@@ -1,7 +1,26 @@
 import axios from 'axios';
 import type { ContentHistoryItem } from '../types/content';
+import type { PlatformPolicies } from '../types/policy';
 
 const API_BASE_URL = '/content';
+
+/**
+ * Preview prompt request/response types
+ */
+export interface PromptPreviewRequest {
+    idea_prompt: string;
+    platforms: string[];
+    platform_policies?: PlatformPolicies;
+}
+
+export interface PlatformPromptPreview {
+    platform: string;
+    prompt: string;
+}
+
+export interface PromptPreviewResponse {
+    previews: PlatformPromptPreview[];
+}
 
 /**
  * Data required to save generated content
@@ -72,6 +91,14 @@ export const contentApi = {
      */
     async getPlatformConfig(platform: string): Promise<{ char_limit: number, max_hashtags?: number }> {
         const response = await axios.get<{ char_limit: number, max_hashtags?: number }>(`/preferences/platform/${platform}`);
+        return response.data;
+    },
+
+    /**
+     * Preview prompts that would be sent to AI without generating content
+     */
+    async previewPrompt(data: PromptPreviewRequest): Promise<PromptPreviewResponse> {
+        const response = await axios.post<PromptPreviewResponse>(`${API_BASE_URL}/preview-prompt`, data);
         return response.data;
     },
 };

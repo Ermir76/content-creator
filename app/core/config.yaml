@@ -86,7 +86,7 @@ defaults:
 platforms:
   linkedin:
     # model: "claude" # Example: prefer Claude for long-form
-  twitter:
+  x:
     # model: "xai"    # Example: prefer XAI for short/witty
   reddit: {}
   instagram: {}

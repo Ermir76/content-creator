@@ -44,7 +44,7 @@ async def judge(
 
     Args:
         texts: Dictionary of anonymous texts {"A": "...", "B": "...", "C": "..."}
-        platform: Target platform (linkedin, twitter, etc.)
+        platform: Target platform (linkedin, x, etc.)
         config: Configuration dict (loaded by orchestrate.py)
 
     Returns:

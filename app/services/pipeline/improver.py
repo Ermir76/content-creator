@@ -31,7 +31,7 @@ async def improve(
     Args:
         v1: The initial draft from generator
         v2: The revised draft from critic
-        platform: Target platform (linkedin, twitter, etc.)
+        platform: Target platform (linkedin, x, etc.)
         config: Configuration dict (loaded by orchestrate.py)
 
     Returns:
