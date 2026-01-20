@@ -30,7 +30,7 @@ export function ModelTab({ data, onChange, disabled }: ModelTabProps) {
     return (
         <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
             <div className="space-y-4">
-                <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-4">Pipeline Configuration</h4>
+                <h4 className="text-sm font-semibold text-foreground mb-4">Pipeline Configuration</h4>
 
                 <ModelSelector
                     label="Draft Generator"
@@ -69,9 +69,9 @@ export function ModelTab({ data, onChange, disabled }: ModelTabProps) {
                 />
             </div>
 
-            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-xs text-blue-700 dark:text-blue-300">
+            <div className="p-4 bg-secondary/20 rounded-lg text-xs text-foreground">
                 <p>
-                    <strong>Note:</strong> Selecting specific models provides granular control but may impact generation cost and speed.
+                    <strong className="text-secondary">Note:</strong> Selecting specific models provides granular control but may impact generation cost and speed.
                     Leaving fields as "(Default)" uses the global system configuration.
                 </p>
             </div>
@@ -89,16 +89,16 @@ function ModelSelector({ label, description, value, options, onChange, disabled 
     disabled?: boolean
 }) {
     return (
-        <div className="flex items-center justify-between p-3 border rounded-lg bg-white dark:bg-slate-900/50 hover:border-slate-300 dark:hover:border-slate-600 transition-colors">
+        <div className="flex items-center justify-between p-3 border rounded-lg bg-card hover:border-primary/50 transition-colors">
             <div className="space-y-0.5">
                 <Label className="text-sm font-medium">{label}</Label>
-                <p className="text-xs text-slate-500">{description}</p>
+                <p className="text-xs text-muted-foreground">{description}</p>
             </div>
             <select
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
                 disabled={disabled}
-                className="w-[200px] px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800"
+                className="w-[200px] px-3 py-2 text-sm rounded-lg border border-border bg-input text-foreground"
             >
                 {options.map((opt: any) => (
                     <option key={opt.value} value={opt.value}>{opt.label}</option>

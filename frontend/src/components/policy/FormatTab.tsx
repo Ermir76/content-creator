@@ -25,12 +25,14 @@ export function FormatTab({ data, constraints, onChange, onConstraintsChange, di
     const ending = data.ending || {};
 
     const [platformLimit, setPlatformLimit] = useState<number>(2000);
+    const [maxHashtags, setMaxHashtags] = useState<number>(30);
 
     useEffect(() => {
         if (platform) {
             contentApi.getPlatformConfig(platform)
                 .then(cfg => {
                     if (cfg.char_limit) setPlatformLimit(cfg.char_limit);
+                    if (cfg.max_hashtags) setMaxHashtags(cfg.max_hashtags);
                 })
                 .catch(err => console.error("Failed to fetch platform config", err));
         }
@@ -68,8 +70,8 @@ export function FormatTab({ data, constraints, onChange, onConstraintsChange, di
         <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
             {/* Constraints */}
             <div className="space-y-4">
-                <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Length & Constraints</h4>
-                <div className="grid grid-cols-1 gap-4">
+                <h4 className="text-sm font-semibold text-foreground">Length & Constraints</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <RangeSliderControl
                         label="Target Length"
                         subLabel={`Max: ${platformLimit}`}
@@ -80,13 +82,23 @@ export function FormatTab({ data, constraints, onChange, onConstraintsChange, di
                         step={10}
                         disabled={disabled}
                     />
+                    <RangeSliderControl
+                        label="Hashtags"
+                        subLabel={`Max: ${maxHashtags}`}
+                        value={constraints.hashtags ?? 3}
+                        onChange={(v) => handleConstraintChange('hashtags', v)}
+                        min={0}
+                        max={maxHashtags}
+                        step={1}
+                        disabled={disabled}
+                    />
                 </div>
             </div>
 
-            <hr className="border-slate-200 dark:border-slate-700" />
+            <hr className="border-border" />
             {/* Hook Strategy */}
             <div className="space-y-4">
-                <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Hook Strategy (Opening)</h4>
+                <h4 className="text-sm font-semibold text-foreground">Hook Strategy (Opening)</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                     <SliderControl label="Punchy (Short)" value={hook.punchy} onChange={(v) => handleHookChange('punchy', v)} disabled={disabled} />
                     <SliderControl label="Question" value={hook.question} onChange={(v) => handleHookChange('question', v)} disabled={disabled} />
@@ -99,11 +111,11 @@ export function FormatTab({ data, constraints, onChange, onConstraintsChange, di
                 </div>
             </div>
 
-            <hr className="border-slate-200 dark:border-slate-700" />
+            <hr className="border-border" />
 
             {/* Body Structure */}
             <div className="space-y-4">
-                <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Body & Structure</h4>
+                <h4 className="text-sm font-semibold text-foreground">Body & Structure</h4>
 
                 <div className="space-y-2">
                     <Label className="text-xs font-medium">Primary Structure</Label>
@@ -111,7 +123,7 @@ export function FormatTab({ data, constraints, onChange, onConstraintsChange, di
                         value={body.type || 'honest-experience'}
                         onChange={(e) => handleBodyTypeChange(e.target.value)}
                         disabled={disabled}
-                        className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700"
+                        className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-input text-foreground"
                     >
                         {BODY_TYPES.map(opt => (
                             <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -127,11 +139,11 @@ export function FormatTab({ data, constraints, onChange, onConstraintsChange, di
                 </div>
             </div>
 
-            <hr className="border-slate-200 dark:border-slate-700" />
+            <hr className="border-border" />
 
             {/* Ending */}
             <div className="space-y-4">
-                <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Ending & CTA</h4>
+                <h4 className="text-sm font-semibold text-foreground">Ending & CTA</h4>
                 <div className="grid grid-cols-2 gap-4">
                     <SliderControl label="One Question" value={ending.one_question} onChange={(v) => handleEndingChange('one_question', v)} disabled={disabled} />
                     <SliderControl label="Call to Action" value={ending.call_to_action} onChange={(v) => handleEndingChange('call_to_action', v)} disabled={disabled} />
@@ -157,7 +169,7 @@ function SliderControl({ label, subLabel, value, onChange, disabled }: {
         <div className="space-y-2">
             <div className="flex justify-between items-baseline">
                 <Label className="text-xs font-medium">{label}</Label>
-                {subLabel && <span className="text-[10px] text-slate-400">{subLabel}</span>}
+                {subLabel && <span className="text-[10px] text-muted-foreground">{subLabel}</span>}
             </div>
             <div className="flex items-center gap-3">
                 <input
@@ -168,9 +180,9 @@ function SliderControl({ label, subLabel, value, onChange, disabled }: {
                     value={value ?? 0}
                     onChange={(e) => onChange(parseFloat(e.target.value))}
                     disabled={disabled}
-                    className="flex-1 cursor-pointer accent-blue-500"
+                    className="flex-1 cursor-pointer accent-primary"
                 />
-                <span className="text-xs w-8 text-right font-mono text-slate-500">
+                <span className="text-xs w-8 text-right font-mono text-muted-foreground">
                     {(value ?? 0).toFixed(1)}
                 </span>
             </div>
@@ -193,7 +205,7 @@ function RangeSliderControl({ label, subLabel, value, onChange, min, max, step, 
         <div className="space-y-2">
             <div className="flex justify-between items-baseline">
                 <Label className="text-xs font-medium">{label}</Label>
-                {subLabel && <span className="text-[10px] text-slate-400">{subLabel}</span>}
+                {subLabel && <span className="text-[10px] text-muted-foreground">{subLabel}</span>}
             </div>
             <div className="flex items-center gap-3">
                 <input
@@ -204,9 +216,9 @@ function RangeSliderControl({ label, subLabel, value, onChange, min, max, step, 
                     value={value ?? min}
                     onChange={(e) => onChange(parseFloat(e.target.value))}
                     disabled={disabled}
-                    className="flex-1 cursor-pointer accent-blue-500"
+                    className="flex-1 cursor-pointer accent-primary"
                 />
-                <span className="text-xs w-12 text-right font-mono text-slate-500">
+                <span className="text-xs w-12 text-right font-mono text-muted-foreground">
                     {value}
                 </span>
             </div>

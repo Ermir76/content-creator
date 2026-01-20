@@ -57,7 +57,7 @@ export function StyleTab({ data, onChange, disabled }: StyleTabProps) {
         <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
             {/* Writing Style */}
             <div className="space-y-4">
-                <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Writing Style</h4>
+                <h4 className="text-sm font-semibold text-foreground">Writing Style</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <SliderControl
                         label="Directness"
@@ -83,11 +83,11 @@ export function StyleTab({ data, onChange, disabled }: StyleTabProps) {
                 </div>
             </div>
 
-            <hr className="border-slate-200 dark:border-slate-700" />
+            <hr className="border-border" />
 
             {/* Approach */}
             <div className="space-y-4">
-                <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Approach Strategy</h4>
+                <h4 className="text-sm font-semibold text-foreground">Approach Strategy</h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <SliderControl
                         label="Direct"
@@ -110,11 +110,11 @@ export function StyleTab({ data, onChange, disabled }: StyleTabProps) {
                 </div>
             </div>
 
-            <hr className="border-slate-200 dark:border-slate-700" />
+            <hr className="border-border" />
 
             {/* Mood */}
             <div className="space-y-4">
-                <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Mood Mix</h4>
+                <h4 className="text-sm font-semibold text-foreground">Mood Mix</h4>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <SliderControl label="Reflective" value={mood.reflective} onChange={(v) => handleMoodChange('reflective', v)} disabled={disabled} />
                     <SliderControl label="Energetic" value={mood.energetic} onChange={(v) => handleMoodChange('energetic', v)} disabled={disabled} />
@@ -127,12 +127,12 @@ export function StyleTab({ data, onChange, disabled }: StyleTabProps) {
                 </div>
             </div>
 
-            <hr className="border-slate-200 dark:border-slate-700" />
+            <hr className="border-border" />
 
             {/* Humor */}
-            <div className="space-y-4 p-4 bg-slate-100 dark:bg-slate-900/40 rounded-lg">
+            <div className="space-y-4 p-4 bg-muted rounded-lg">
                 <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Humor Settings</h4>
+                    <h4 className="text-sm font-semibold text-foreground">Humor Settings</h4>
                     <Switch
                         checked={humor.enabled || false}
                         onCheckedChange={(checked: boolean) => handleHumorChange('enabled', checked)}
@@ -151,7 +151,7 @@ export function StyleTab({ data, onChange, disabled }: StyleTabProps) {
                         />
 
                         <div className="space-y-2">
-                            <Label className="text-xs font-medium text-slate-500">Humor Types</Label>
+                            <Label className="text-xs font-medium text-muted-foreground">Humor Types</Label>
                             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                                 {HUMOR_TYPES_LIST.map(type => (
                                     <div key={type} className="flex items-center space-x-2">
@@ -180,7 +180,7 @@ export function StyleTab({ data, onChange, disabled }: StyleTabProps) {
                         value={data.emojis || 'none'}
                         onChange={(e) => onChange({ ...data, emojis: e.target.value })}
                         disabled={disabled}
-                        className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700"
+                        className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-input text-foreground"
                     >
                         {EMOJI_OPTIONS.map(opt => (
                             <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -188,7 +188,7 @@ export function StyleTab({ data, onChange, disabled }: StyleTabProps) {
                     </select>
                 </div>
 
-                <div className="flex items-center justify-between p-2 border rounded-lg bg-white dark:bg-slate-900/50">
+                <div className="flex items-center justify-between p-2 border rounded-lg bg-card">
                     <Label className="text-sm font-medium cursor-pointer" htmlFor="short-p">Short Paragraphs</Label>
                     <Switch
                         id="short-p"
@@ -214,7 +214,7 @@ function SliderControl({ label, subLabel, value, onChange, disabled }: {
         <div className="space-y-2">
             <div className="flex justify-between items-baseline">
                 <Label className="text-xs font-medium">{label}</Label>
-                {subLabel && <span className="text-[10px] text-slate-400">{subLabel}</span>}
+                {subLabel && <span className="text-[10px] text-muted-foreground">{subLabel}</span>}
             </div>
             <div className="flex items-center gap-3">
                 <input
@@ -225,9 +225,9 @@ function SliderControl({ label, subLabel, value, onChange, disabled }: {
                     value={value ?? 0}
                     onChange={(e) => onChange(parseFloat(e.target.value))}
                     disabled={disabled}
-                    className="flex-1 cursor-pointer accent-blue-500"
+                    className="flex-1 cursor-pointer accent-primary"
                 />
-                <span className="text-xs w-8 text-right font-mono text-slate-500">
+                <span className="text-xs w-8 text-right font-mono text-muted-foreground">
                     {(value ?? 0).toFixed(1)}
                 </span>
             </div>

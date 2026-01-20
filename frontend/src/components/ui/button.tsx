@@ -15,11 +15,11 @@ const buttonVariants = cva(
         outline:
           "border-2 border-primary bg-transparent text-primary hover:bg-primary hover:text-primary-foreground",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-sm hover:shadow-md",
+          "bg-secondary text-secondary-foreground border-2 border-white/20 rounded-2xl shadow-[0_0_20px_rgba(127,199,204,0.4),8px_8px_16px_rgba(0,0,0,0.4),-4px_-4px_12px_rgba(127,199,204,0.25),inset_0_2px_4px_rgba(255,255,255,0.3),inset_0_-2px_4px_rgba(0,0,0,0.1)] hover:shadow-[0_0_30px_rgba(127,199,204,0.5),4px_4px_12px_rgba(0,0,0,0.35),-2px_-2px_8px_rgba(127,199,204,0.2)] hover:translate-y-[2px] active:translate-y-[3px] active:shadow-[0_0_15px_rgba(127,199,204,0.3),2px_2px_8px_rgba(0,0,0,0.3)]",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
         success: "bg-success text-success-foreground hover:bg-success/90 shadow-md hover:shadow-lg",
-        highlight: "bg-highlight text-highlight-foreground hover:bg-highlight/90 shadow-md hover:shadow-lg",
+        highlight: "bg-highlight text-highlight-foreground border-2 border-white/20 rounded-2xl shadow-[0_0_25px_rgba(234,137,19,0.5),8px_8px_16px_rgba(0,0,0,0.4),-4px_-4px_12px_rgba(234,137,19,0.35),inset_0_2px_4px_rgba(255,255,255,0.35),inset_0_-2px_4px_rgba(0,0,0,0.1)] hover:shadow-[0_0_40px_rgba(234,137,19,0.6),4px_4px_12px_rgba(0,0,0,0.35),-2px_-2px_8px_rgba(234,137,19,0.25)] hover:translate-y-[2px] active:translate-y-[3px] active:shadow-[0_0_20px_rgba(234,137,19,0.4),2px_2px_8px_rgba(0,0,0,0.3)]",
       },
       size: {
         default: "h-11 px-5 py-2.5",
@@ -37,7 +37,7 @@ const buttonVariants = cva(
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
+  VariantProps<typeof buttonVariants> {
   asChild?: boolean
 }
 

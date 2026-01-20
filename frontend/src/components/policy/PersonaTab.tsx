@@ -37,7 +37,7 @@ export function PersonaTab({ data, onChange, disabled }: PersonaTabProps) {
                         value={data.perspective || 'first-person'}
                         onChange={(e) => onChange({ ...data, perspective: e.target.value })}
                         disabled={disabled}
-                        className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700"
+                        className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-input text-foreground"
                     >
                         {PERSPECTIVE_OPTIONS.map(opt => (
                             <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -45,10 +45,10 @@ export function PersonaTab({ data, onChange, disabled }: PersonaTabProps) {
                     </select>
                 </div>
 
-                <div className="flex items-center justify-between p-3 border rounded-lg bg-white dark:bg-slate-900/50">
+                <div className="flex items-center justify-between p-3 border rounded-lg bg-card">
                     <div className="space-y-0.5">
                         <Label className="text-sm font-medium">Corporate Voice</Label>
-                        <p className="text-xs text-slate-500">Brand voice mode</p>
+                        <p className="text-xs text-muted-foreground">Brand voice mode</p>
                     </div>
                     <Switch
                         checked={data.corporate || false}
@@ -58,11 +58,11 @@ export function PersonaTab({ data, onChange, disabled }: PersonaTabProps) {
                 </div>
             </div>
 
-            <hr className="border-slate-200 dark:border-slate-700" />
+            <hr className="border-border" />
 
             {/* Personality Traits */}
             <div className="space-y-4">
-                <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
                     Personality Traits
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
@@ -115,7 +115,7 @@ export function PersonaTab({ data, onChange, disabled }: PersonaTabProps) {
 
             {/* Authenticity */}
             <div className="space-y-4">
-                <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Authenticity</h4>
+                <h4 className="text-sm font-semibold text-foreground">Authenticity</h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <SliderControl
                         label="Honesty"
@@ -155,7 +155,7 @@ function SliderControl({ label, subLabel, value, onChange, disabled }: {
         <div className="space-y-2">
             <div className="flex justify-between items-baseline">
                 <Label className="text-xs font-medium">{label}</Label>
-                {subLabel && <span className="text-[10px] text-slate-400">{subLabel}</span>}
+                {subLabel && <span className="text-[10px] text-muted-foreground">{subLabel}</span>}
             </div>
             <div className="flex items-center gap-3">
                 <input
@@ -166,9 +166,9 @@ function SliderControl({ label, subLabel, value, onChange, disabled }: {
                     value={value ?? 0}
                     onChange={(e) => onChange(parseFloat(e.target.value))}
                     disabled={disabled}
-                    className="flex-1 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                    className="flex-1 cursor-pointer accent-primary"
                 />
-                <span className="text-xs w-8 text-right font-mono text-slate-500">
+                <span className="text-xs w-8 text-right font-mono text-muted-foreground">
                     {(value ?? 0).toFixed(1)}
                 </span>
             </div>

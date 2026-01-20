@@ -24,9 +24,9 @@ export function PolicyEditor({ policy, onChange, disabled, platform }: PolicyEdi
     };
 
     return (
-        <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div className="bg-muted/30 rounded-lg border border-border overflow-hidden">
             {/* Tab Navigation */}
-            <div className="flex border-b border-slate-200 dark:border-slate-700 bg-slate-100/50 dark:bg-slate-900/50">
+            <div className="flex border-b border-border bg-muted/50">
                 <TabButton
                     active={activeTab === 'persona'}
                     onClick={() => handleTabChange('persona')}
@@ -105,8 +105,8 @@ function TabButton({ active, onClick, icon, label, disabled }: any) {
             disabled={disabled}
             className={`flex-1 justify-center rounded-none h-auto py-3 gap-2 border-b-2 hover:bg-transparent
                 ${active
-                    ? 'border-blue-500 text-blue-600 dark:text-blue-400 bg-white dark:bg-slate-800'
-                    : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
+                    ? 'border-primary text-primary bg-card'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
                 }
             `}
         >

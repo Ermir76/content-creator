@@ -5,57 +5,104 @@
 @layer base {
   :root {
     /* Light Mode - Sand-based warm theme */
-    --background: 37 52% 78%;           /* Sand #E4CBA9 */
-    --foreground: 185 73% 12%;          /* Deep Sea #092F33 */
-    --card: 37 52% 88%;                 /* Lighter Sand */
-    --card-foreground: 185 73% 12%;     /* Deep Sea */
-    --popover: 37 52% 92%;              /* Even lighter Sand */
-    --popover-foreground: 185 73% 12%;  /* Deep Sea */
-    --primary: 15 56% 44%;              /* Terracotta #AF5031 */
-    --primary-foreground: 37 52% 95%;   /* Light Sand */
-    --secondary: 184 41% 65%;           /* Sky Blue #7FC7CC */
-    --secondary-foreground: 185 73% 12%;/* Deep Sea */
-    --muted: 37 30% 85%;                /* Muted Sand */
-    --muted-foreground: 185 40% 30%;    /* Muted Deep Sea */
-    --accent: 4 95% 82%;                /* Cherry Blossom #FDABA5 */
-    --accent-foreground: 185 73% 12%;   /* Deep Sea */
-    --destructive: 359 97% 30%;         /* Red Wine #980204 */
-    --destructive-foreground: 37 52% 95%;/* Light Sand */
-    --success: 79 27% 28%;              /* Moss Green #4B5B34 */
-    --success-foreground: 37 52% 95%;   /* Light Sand */
-    --highlight: 33 85% 50%;            /* Sunshine #EA8913 */
-    --highlight-foreground: 185 73% 12%;/* Deep Sea */
-    --border: 37 30% 70%;               /* Sand border */
-    --input: 37 30% 75%;                /* Sand input */
-    --ring: 15 56% 44%;                 /* Terracotta ring */
-    --radius: 1rem;                     /* Increased for playful feel */
+    --background: 37 52% 78%;
+    /* Sand #E4CBA9 */
+    --foreground: 185 73% 12%;
+    /* Deep Sea #092F33 */
+    --card: 37 52% 88%;
+    /* Lighter Sand */
+    --card-foreground: 185 73% 12%;
+    /* Deep Sea */
+    --popover: 37 52% 92%;
+    /* Even lighter Sand */
+    --popover-foreground: 185 73% 12%;
+    /* Deep Sea */
+    --primary: 15 56% 44%;
+    /* Terracotta #AF5031 */
+    --primary-foreground: 37 52% 95%;
+    /* Light Sand */
+    --secondary: 184 41% 65%;
+    /* Sky Blue #7FC7CC */
+    --secondary-foreground: 185 73% 12%;
+    /* Deep Sea */
+    --muted: 37 30% 85%;
+    /* Muted Sand */
+    --muted-foreground: 185 40% 30%;
+    /* Muted Deep Sea */
+    --accent: 4 95% 82%;
+    /* Cherry Blossom #FDABA5 */
+    --accent-foreground: 185 73% 12%;
+    /* Deep Sea */
+    --destructive: 359 97% 30%;
+    /* Red Wine #980204 */
+    --destructive-foreground: 37 52% 95%;
+    /* Light Sand */
+    --success: 79 27% 28%;
+    /* Moss Green #4B5B34 */
+    --success-foreground: 37 52% 95%;
+    /* Light Sand */
+    --highlight: 33 85% 50%;
+    /* Sunshine #EA8913 */
+    --highlight-foreground: 185 73% 12%;
+    /* Deep Sea */
+    --border: 37 30% 70%;
+    /* Sand border */
+    --input: 37 30% 75%;
+    /* Sand input */
+    --ring: 15 56% 44%;
+    /* Terracotta ring */
+    --radius: 1rem;
+    /* Increased for playful feel */
   }
 
   .dark {
     /* Dark Mode - Deep Sea-based rich theme */
-    --background: 210 73% 12%;          /* Deep Sea #092F33 */
-    --foreground: 37 52% 88%;           /* Light Sand */
-    --card: 200 60% 16%;                /* Slightly lighter Deep Sea */
-    --card-foreground: 37 52% 88%;      /* Light Sand */
-    --popover: 185 60% 18%;             /* Lighter Deep Sea */
-    --popover-foreground: 37 52% 88%;   /* Light Sand */
-    --primary: 15 56% 50%;              /* Brighter Terracotta */
-    --primary-foreground: 37 52% 95%;   /* Light Sand */
-    --secondary: 184 41% 55%;           /* Slightly muted Sky Blue */
-    --secondary-foreground: 185 73% 12%;/* Deep Sea */
-    --muted: 185 50% 20%;               /* Muted Deep Sea */
-    --muted-foreground: 37 30% 65%;     /* Muted Sand */
-    --accent: 4 80% 75%;                /* Muted Cherry Blossom */
-    --accent-foreground: 180 73% 12%;   /* Deep Sea */
-    --destructive: 359 80% 40%;         /* Lighter Red Wine */
-    --destructive-foreground: 37 52% 95%;/* Light Sand */
-    --success: 79 35% 40%;              /* Brighter Moss Green */
-    --success-foreground: 37 52% 95%;   /* Light Sand */
-    --highlight: 33 85% 55%;            /* Brighter Sunshine */
-    --highlight-foreground: 185 73% 12%;/* Deep Sea */
-    --border: 120 40% 25%;              /* Deep Sea border */
-    --input: 185 40% 22%;               /* Deep Sea input */
-    --ring: 33 85% 55%;                 /* Sunshine ring */
+    --background: 210 73% 12%;
+    /* Deep Sea #092F33 */
+    --foreground: 37 52% 88%;
+    /* Light Sand */
+    --card: 200 60% 16%;
+    /* Slightly lighter Deep Sea */
+    --card-foreground: 37 52% 88%;
+    /* Light Sand */
+    --popover: 185 60% 18%;
+    /* Lighter Deep Sea */
+    --popover-foreground: 37 52% 88%;
+    /* Light Sand */
+    --primary: 15 56% 50%;
+    /* Brighter Terracotta */
+    --primary-foreground: 37 52% 95%;
+    /* Light Sand */
+    --secondary: 184 41% 55%;
+    /* Slightly muted Sky Blue */
+    --secondary-foreground: 185 73% 12%;
+    /* Deep Sea */
+    --muted: 185 50% 20%;
+    /* Muted Deep Sea */
+    --muted-foreground: 37 30% 65%;
+    /* Muted Sand */
+    --accent: 4 80% 75%;
+    /* Muted Cherry Blossom */
+    --accent-foreground: 180 73% 12%;
+    /* Deep Sea */
+    --destructive: 359 80% 40%;
+    /* Lighter Red Wine */
+    --destructive-foreground: 37 52% 95%;
+    /* Light Sand */
+    --success: 79 35% 40%;
+    /* Brighter Moss Green */
+    --success-foreground: 37 52% 95%;
+    /* Light Sand */
+    --highlight: 33 85% 55%;
+    /* Brighter Sunshine */
+    --highlight-foreground: 185 73% 12%;
+    /* Deep Sea */
+    --border: 180 73% 25%;
+    /* Neon Green border */
+    --input: 185 40% 22%;
+    /* Deep Sea input */
+    --ring: 33 85% 55%;
+    /* Sunshine ring */
   }
 }
 
@@ -71,6 +118,7 @@
 }
 
 @layer utilities {
+
   /* Smooth theme transitions for all elements */
   .theme-transition {
     transition: background-color 0.3s ease,
@@ -125,9 +173,19 @@
 
   /* Wiggle animation for selected items */
   @keyframes wiggle {
-    0%, 100% { transform: rotate(0deg); }
-    25% { transform: rotate(-3deg); }
-    75% { transform: rotate(3deg); }
+
+    0%,
+    100% {
+      transform: rotate(0deg);
+    }
+
+    25% {
+      transform: rotate(-3deg);
+    }
+
+    75% {
+      transform: rotate(3deg);
+    }
   }
 
   .animate-wiggle {
@@ -140,9 +198,11 @@
       opacity: 0;
       transform: scale(0.9) translateY(10px);
     }
+
     50% {
       transform: scale(1.02) translateY(-2px);
     }
+
     100% {
       opacity: 1;
       transform: scale(1) translateY(0);
@@ -154,18 +214,38 @@
   }
 
   /* Staggered animation delays */
-  .stagger-1 { animation-delay: 0.05s; }
-  .stagger-2 { animation-delay: 0.1s; }
-  .stagger-3 { animation-delay: 0.15s; }
-  .stagger-4 { animation-delay: 0.2s; }
-  .stagger-5 { animation-delay: 0.25s; }
-  .stagger-6 { animation-delay: 0.3s; }
+  .stagger-1 {
+    animation-delay: 0.05s;
+  }
+
+  .stagger-2 {
+    animation-delay: 0.1s;
+  }
+
+  .stagger-3 {
+    animation-delay: 0.15s;
+  }
+
+  .stagger-4 {
+    animation-delay: 0.2s;
+  }
+
+  .stagger-5 {
+    animation-delay: 0.25s;
+  }
+
+  .stagger-6 {
+    animation-delay: 0.3s;
+  }
 
   /* Playful pulse for highlights */
   @keyframes playfulPulse {
-    0%, 100% {
+
+    0%,
+    100% {
       box-shadow: 0 0 0 0 hsl(var(--highlight) / 0.4);
     }
+
     50% {
       box-shadow: 0 0 0 8px hsl(var(--highlight) / 0);
     }
