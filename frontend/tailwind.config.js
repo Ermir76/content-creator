@@ -46,7 +46,50 @@ export default {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))'
         },
-      }
+        // New playful palette colors
+        success: {
+          DEFAULT: 'hsl(var(--success))',
+          foreground: 'hsl(var(--success-foreground))'
+        },
+        highlight: {
+          DEFAULT: 'hsl(var(--highlight))',
+          foreground: 'hsl(var(--highlight-foreground))'
+        },
+        // Direct palette access
+        sand: '#E4CBA9',
+        'sky-blue': '#7FC7CC',
+        'deep-sea': '#092F33',
+        'moss-green': '#4B5B34',
+        terracotta: '#AF5031',
+        'cherry-blossom': '#FDABA5',
+        'red-wine': '#980204',
+        sunshine: '#EA8913',
+      },
+      fontFamily: {
+        sans: ['Poppins', 'system-ui', 'sans-serif'],
+        display: ['Poppins', 'system-ui', 'sans-serif'],
+      },
+      keyframes: {
+        wiggle: {
+          '0%, 100%': { transform: 'rotate(0deg)' },
+          '25%': { transform: 'rotate(-3deg)' },
+          '75%': { transform: 'rotate(3deg)' },
+        },
+        bounceIn: {
+          '0%': { opacity: '0', transform: 'scale(0.9) translateY(10px)' },
+          '50%': { transform: 'scale(1.02) translateY(-2px)' },
+          '100%': { opacity: '1', transform: 'scale(1) translateY(0)' },
+        },
+        shimmer: {
+          '0%': { backgroundPosition: '-200% 0' },
+          '100%': { backgroundPosition: '200% 0' },
+        },
+      },
+      animation: {
+        wiggle: 'wiggle 0.3s ease-in-out',
+        'bounce-in': 'bounceIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
+        shimmer: 'shimmer 2s linear infinite',
+      },
     }
   },
   plugins: [],

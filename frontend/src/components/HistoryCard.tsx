@@ -55,7 +55,7 @@ export function HistoryCard({ item, onDelete, onUpdate }: HistoryCardProps) {
     const platformColor = PLATFORM_COLORS[item.platform.toLowerCase()] || 'bg-gray-600';
     const platformLabel = PLATFORM_LABELS[item.platform.toLowerCase()] || item.platform;
     const modelLabel = item.model_used ? (MODEL_LABELS[item.model_used.toLowerCase()] || item.model_used) : null;
-    const modelColor = item.model_used ? (MODEL_COLORS[item.model_used.toLowerCase()] || 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300') : '';
+    const modelColor = item.model_used ? (MODEL_COLORS[item.model_used.toLowerCase()] || 'bg-muted text-muted-foreground') : '';
 
     const handleCopy = async () => {
         try {
@@ -125,7 +125,7 @@ export function HistoryCard({ item, onDelete, onUpdate }: HistoryCardProps) {
 
     return (
         <>
-            <Card className="card-hover bg-white dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 overflow-hidden">
+            <Card className="card-hover overflow-hidden animate-bounce-in">
                 <CardHeader className="pb-2 space-y-2">
                     <div className="flex items-center justify-between flex-wrap gap-2">
                         <div className="flex items-center gap-2">
@@ -139,12 +139,12 @@ export function HistoryCard({ item, onDelete, onUpdate }: HistoryCardProps) {
                                 </Badge>
                             )}
                         </div>
-                        <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
                             <Calendar className="w-3 h-3" />
                             {formatDate(item.created_at)}
                         </div>
                     </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate italic">
+                    <p className="text-xs text-muted-foreground truncate italic">
                         "{item.idea_prompt}"
                     </p>
                 </CardHeader>
@@ -152,15 +152,15 @@ export function HistoryCard({ item, onDelete, onUpdate }: HistoryCardProps) {
                     {/* Content Preview - Clickable to open modal */}
                     <div
                         onClick={() => setModalOpen(true)}
-                        className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700/50 cursor-pointer hover:border-blue-300 dark:hover:border-blue-600 transition-colors"
+                        className="bg-muted/50 p-3 rounded-xl border-2 border-border cursor-pointer hover:border-secondary transition-all duration-200"
                     >
-                        <p className="text-sm whitespace-pre-wrap leading-relaxed text-slate-700 dark:text-slate-200 line-clamp-4">
+                        <p className="text-sm whitespace-pre-wrap leading-relaxed text-foreground line-clamp-4">
                             {previewText}
                         </p>
                     </div>
 
                     {/* Character count */}
-                    <div className="text-xs text-slate-400 dark:text-slate-500 text-right">
+                    <div className="text-xs text-muted-foreground text-right">
                         {currentContent.length} characters
                     </div>
 
@@ -168,9 +168,9 @@ export function HistoryCard({ item, onDelete, onUpdate }: HistoryCardProps) {
                     <div className="flex gap-2">
                         <Button
                             onClick={() => setModalOpen(true)}
-                            variant="outline"
+                            variant="secondary"
                             size="sm"
-                            className="flex-1 border-purple-300 dark:border-purple-600 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20"
+                            className="flex-1"
                         >
                             <Eye className="mr-1 h-4 w-4" />
                             View
@@ -179,7 +179,7 @@ export function HistoryCard({ item, onDelete, onUpdate }: HistoryCardProps) {
                             onClick={handleCopy}
                             variant="outline"
                             size="sm"
-                            className={`flex-1 transition-all ${copied ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700 text-green-600 dark:text-green-400' : 'border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/30'}`}
+                            className={`flex-1 transition-all ${copied ? 'bg-success/10 border-success text-success' : ''}`}
                             disabled={copied}
                         >
                             {copied ? (
@@ -197,9 +197,8 @@ export function HistoryCard({ item, onDelete, onUpdate }: HistoryCardProps) {
                         {onDelete && (
                             <Button
                                 onClick={handleDelete}
-                                variant="outline"
+                                variant="destructive"
                                 size="sm"
-                                className="border-red-300 dark:border-red-600 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
                                 disabled={deleting}
                             >
                                 <Trash2 className={`mr-1 h-4 w-4 ${deleting ? 'animate-pulse' : ''}`} />

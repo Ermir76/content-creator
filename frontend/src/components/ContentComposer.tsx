@@ -201,15 +201,15 @@ export function ContentComposer({ onGenerate, isLoading }: ContentComposerProps)
   return (
     <div className="w-full space-y-8">
       {/* 1. INPUT CARD */}
-      <Card className="shadow-xl border-slate-200 dark:border-slate-800">
+      <Card className="warm-glow">
         <CardContent className="p-6">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Idea Input */}
             <div className="space-y-2">
-              <Label htmlFor="idea-prompt" className="text-sm font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 ml-1">
+              <Label htmlFor="idea-prompt" className="text-sm font-bold uppercase tracking-widest text-muted-foreground ml-1">
                 What's your idea?
               </Label>
-              <div className="bg-slate-50 dark:bg-slate-900/50 rounded-xl p-4 min-h-[180px] border border-slate-100 dark:border-slate-800 shadow-inner">
+              <div className="bg-muted/50 rounded-2xl p-4 min-h-[180px] border-2 border-border clay-input">
                 <Textarea
                   id="idea-prompt"
                   placeholder="E.g., Share tips about staying productive while working from home..."
@@ -218,12 +218,12 @@ export function ContentComposer({ onGenerate, isLoading }: ContentComposerProps)
                     setIdeaPrompt(e.target.value);
                     setShowValidation(false);
                   }}
-                  className={`w-full h-full bg-transparent border-none focus-visible:ring-0 text-lg resize-none p-0 placeholder:text-slate-400 ${showValidation && !ideaPrompt.trim() ? 'placeholder:text-red-400' : ''}`}
+                  className={`w-full h-full bg-transparent border-none focus-visible:ring-0 text-lg resize-none p-0 placeholder:text-muted-foreground/60 ${showValidation && !ideaPrompt.trim() ? 'placeholder:text-destructive' : ''}`}
                   disabled={isLoading}
                 />
               </div>
               {showValidation && !ideaPrompt.trim() && (
-                <p className="text-sm text-destructive pl-1">This field is required</p>
+                <p className="text-sm text-destructive pl-1 font-medium">This field is required</p>
               )}
             </div>
 
@@ -239,7 +239,8 @@ export function ContentComposer({ onGenerate, isLoading }: ContentComposerProps)
           onClick={handlePreviewPrompt}
           disabled={isLoading || isLoadingPreview}
           variant="secondary"
-          className="flex-1 py-6 text-base font-bold uppercase tracking-wide bg-orange-100 text-orange-900 hover:bg-orange-200 dark:bg-orange-900/20 dark:text-orange-100 dark:hover:bg-orange-900/40 border border-orange-200 dark:border-orange-800"
+          size="lg"
+          className="flex-1 py-6 text-base font-bold uppercase tracking-wide"
         >
           {isLoadingPreview ? (
             <>
@@ -254,9 +255,11 @@ export function ContentComposer({ onGenerate, isLoading }: ContentComposerProps)
           )}
         </Button>
         <Button
-          onClick={handleSubmit} // Trigger form submit manually since it's outside form
+          onClick={handleSubmit}
           disabled={isLoading || isLoadingPreview}
-          className="flex-1 py-6 text-base font-bold uppercase tracking-wide bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white shadow-lg shadow-blue-900/20"
+          variant="highlight"
+          size="lg"
+          className="flex-1 py-6 text-base font-bold uppercase tracking-wide"
         >
           {isLoading ? (
             <>
@@ -274,31 +277,30 @@ export function ContentComposer({ onGenerate, isLoading }: ContentComposerProps)
 
       {/* 2. PLATFORM GRID (Sibling) */}
       <div className="space-y-3">
-        <Label className="text-sm font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 ml-1">
+        <Label className="text-sm font-bold uppercase tracking-widest text-muted-foreground ml-1">
           Select Platforms
         </Label>
-        <div className={`grid grid-cols-2 lg:grid-cols-3 gap-6 transition-all ${showValidation && selectedPlatforms.length === 0 ? 'ring-2 ring-destructive/50 rounded-xl p-2' : ''}`}>
-          {PLATFORMS.map((platform) => {
+        <div className={`grid grid-cols-2 lg:grid-cols-3 gap-6 transition-all ${showValidation && selectedPlatforms.length === 0 ? 'ring-2 ring-destructive/50 rounded-2xl p-2' : ''}`}>
+          {PLATFORMS.map((platform, index) => {
             const Icon = platform.icon;
             const isSelected = selectedPlatforms.includes(platform.id);
-            // const isExpanded = expandedPlatforms.includes(platform.id); // Removed logic
 
             return (
               <div
                 key={platform.id}
-                className={`relative cursor-pointer group flex flex-col items-center justify-center gap-3 p-6 rounded-3xl border-2 transition-all duration-300 ${isSelected
-                  ? 'bg-white dark:bg-slate-800 border-blue-500 shadow-xl scale-105 z-10'
-                  : 'bg-white/40 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 hover:scale-105 hover:bg-white dark:hover:bg-slate-800 hover:shadow-lg'
+                className={`relative cursor-pointer group flex flex-col items-center justify-center gap-3 p-6 rounded-2xl border-2 transition-all duration-300 animate-bounce-in stagger-${index + 1} ${isSelected
+                  ? 'bg-card border-primary shadow-xl scale-105 z-10'
+                  : 'bg-card/50 border-border hover:scale-105 hover:bg-card hover:shadow-lg hover:border-accent'
                   }`}
                 onClick={() => handlePlatformToggle(platform.id)}
               >
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-md transition-colors ${isSelected
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 group-hover:bg-slate-300 dark:group-hover:bg-slate-700'
+                <div className={`w-14 h-14 rounded-xl flex items-center justify-center shadow-md transition-all duration-300 ${isSelected
+                  ? 'bg-primary text-primary-foreground animate-wiggle'
+                  : 'bg-muted text-muted-foreground group-hover:bg-secondary group-hover:text-secondary-foreground'
                   }`}>
-                  <Icon className="w-6 h-6" />
+                  <Icon className="w-7 h-7" />
                 </div>
-                <span className={`font-extrabold text-lg ${isSelected ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'
+                <span className={`font-bold text-lg transition-colors ${isSelected ? 'text-foreground' : 'text-muted-foreground'
                   }`}>
                   {platform.name}
                 </span>
@@ -308,36 +310,34 @@ export function ContentComposer({ onGenerate, isLoading }: ContentComposerProps)
                     <button
                       type="button"
                       onClick={(e) => handleOpenSettings(platform.id, e)}
-                      className="absolute top-3 right-3 p-2 text-slate-300 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-full transition-all"
+                      className="absolute top-3 right-3 p-2 text-muted-foreground hover:text-primary hover:bg-accent rounded-full transition-all btn-bounce"
                     >
                       <Settings2 className="w-5 h-5" />
                     </button>
                   )}
-
-                {/* No inline PolicyEditor here anymore */}
               </div>
             );
           })}
         </div>
         {showValidation && selectedPlatforms.length === 0 && (
-          <p className="text-sm text-destructive pl-1">Please select at least one platform</p>
+          <p className="text-sm text-destructive pl-1 font-medium">Please select at least one platform</p>
         )}
       </div>
 
       {/* Prompt Preview Overlay */}
       {promptPreviews.length > 0 && (
-        <Card className="animate-in slide-in-from-top-4 border-blue-200 dark:border-blue-900">
+        <Card className="animate-bounce-in border-secondary">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-lg text-blue-800 dark:text-blue-300">Prompt Previews</CardTitle>
+            <CardTitle className="text-lg text-secondary-foreground">Prompt Previews</CardTitle>
             <Button variant="ghost" size="sm" onClick={() => setPromptPreviews([])}>
               <X className="w-4 h-4" />
             </Button>
           </CardHeader>
           <CardContent className="space-y-4 max-h-[400px] overflow-y-auto">
             {promptPreviews.map((preview) => (
-              <div key={preview.platform} className="p-4 bg-slate-50 dark:bg-slate-950 rounded-lg border border-slate-100 dark:border-slate-800">
-                <div className="font-bold text-blue-600 dark:text-blue-400 text-xs uppercase mb-2 tracking-wider">{preview.platform}</div>
-                <pre className="whitespace-pre-wrap text-sm font-mono text-slate-600 dark:text-slate-400">
+              <div key={preview.platform} className="p-4 bg-muted/50 rounded-xl border-2 border-border">
+                <div className="font-bold text-primary text-xs uppercase mb-2 tracking-wider">{preview.platform}</div>
+                <pre className="whitespace-pre-wrap text-sm font-mono text-muted-foreground">
                   {preview.prompt}
                 </pre>
               </div>

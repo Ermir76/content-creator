@@ -72,13 +72,13 @@ export function SuccessCard({
     const platformColor = PLATFORM_COLORS[platform.toLowerCase()] || 'bg-gray-600';
     const platformLabel = PLATFORM_LABELS[platform.toLowerCase()] || platform;
     const modelLabel = displayModel ? (MODEL_LABELS[displayModel.toLowerCase()] || displayModel) : null;
-    const modelColor = displayModel ? (MODEL_COLORS[displayModel.toLowerCase()] || 'bg-slate-100 text-slate-700') : '';
+    const modelColor = displayModel ? (MODEL_COLORS[displayModel.toLowerCase()] || 'bg-muted text-muted-foreground') : '';
 
 
 
     return (
         <>
-            <Card className={`card-hover bg-white dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 overflow-hidden ${saved ? 'ring-2 ring-green-500/50' : ''}`}>
+            <Card className={`card-hover overflow-hidden animate-bounce-in ${saved ? 'ring-2 ring-success/50' : ''}`}>
                 <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
@@ -86,7 +86,7 @@ export function SuccessCard({
                                 {platformLabel}
                             </Badge>
                             {saved && (
-                                <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 border-green-200 dark:border-green-700">
+                                <Badge variant="success">
                                     <CheckCircle className="w-3 h-3 mr-1" />
                                     Saved
                                 </Badge>
@@ -108,15 +108,15 @@ export function SuccessCard({
                     />
 
                     <div
-                        className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-lg border border-slate-100 dark:border-slate-700/50 max-h-[500px] overflow-y-auto custom-scrollbar"
+                        className="bg-muted/50 p-4 rounded-xl border-2 border-border max-h-[500px] overflow-y-auto card-scroll"
                     >
-                        <p className="text-sm whitespace-pre-wrap leading-relaxed text-slate-700 dark:text-slate-200">
+                        <p className="text-sm whitespace-pre-wrap leading-relaxed text-foreground">
                             {displayContent}
                         </p>
                     </div>
 
                     {displayContent && (
-                        <div className="text-xs text-slate-400 dark:text-slate-500 text-right">
+                        <div className="text-xs text-muted-foreground text-right">
                             {displayContent.length} characters
                         </div>
                     )}
@@ -127,7 +127,7 @@ export function SuccessCard({
                             onClick={handleCopy}
                             variant="outline"
                             size="sm"
-                            className={`flex-1 transition-all ${copied ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700 text-green-600 dark:text-green-400' : 'border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/30'}`}
+                            className={`flex-1 transition-all ${copied ? 'bg-success/10 border-success text-success' : ''}`}
                             disabled={copied}
                         >
                             {copied ? <><Check className="mr-1 h-4 w-4" /> Copied!</> : <><Copy className="mr-1 h-4 w-4" /> Copy</>}
@@ -135,12 +135,9 @@ export function SuccessCard({
                         {onSave && (
                             <Button
                                 onClick={handleSave}
-                                variant="outline"
+                                variant="success"
                                 size="sm"
-                                className={`flex-1 transition-all ${saved
-                                    ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700 text-green-600 dark:text-green-400'
-                                    : 'border-green-400 dark:border-green-600 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20'
-                                    }`}
+                                className={`flex-1 transition-all ${saved ? 'opacity-80' : ''}`}
                                 disabled={saved || saving}
                             >
                                 {saved ? <><CheckCircle className="mr-1 h-4 w-4" /> Saved</> : <><Save className="mr-1 h-4 w-4" /> Save</>}

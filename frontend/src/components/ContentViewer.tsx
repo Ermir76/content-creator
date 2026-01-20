@@ -27,10 +27,10 @@ export function ContentViewer({ results, isLoading, onRetry, onSave }: ContentVi
     // If loading, show centered loader
     if (isLoading) {
         return (
-            <div className="h-full min-h-[500px] flex items-center justify-center rounded-3xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800">
+            <div className="h-full min-h-[500px] flex items-center justify-center rounded-2xl bg-card/50 border-2 border-border">
                 <div className="flex flex-col items-center gap-4">
-                    <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
-                    <p className="text-slate-500 animate-pulse">Forging content...</p>
+                    <Loader2 className="w-12 h-12 text-highlight animate-spin" />
+                    <p className="text-muted-foreground font-medium animate-pulse">Creating magic...</p>
                 </div>
             </div>
         );
@@ -44,8 +44,8 @@ export function ContentViewer({ results, isLoading, onRetry, onSave }: ContentVi
     const activeResult = results.find(r => r.platform === activePlatformId) || results[0];
 
     return (
-        <Card className="h-full min-h-[500px] flex flex-col border-slate-200 dark:border-slate-800 shadow-lg overflow-hidden transition-all duration-500 ease-in-out">
-            <CardHeader className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 px-6 py-4">
+        <Card className="h-full min-h-[500px] flex flex-col overflow-hidden transition-all duration-500 ease-in-out">
+            <CardHeader className="border-b-2 border-border bg-muted/30 px-6 py-4">
                 <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
                     {/* Platform Switcher Tabs */}
                     {results.map((result) => {
@@ -59,10 +59,10 @@ export function ContentViewer({ results, isLoading, onRetry, onSave }: ContentVi
                                 key={result.platform}
                                 onClick={() => setActivePlatformId(result.platform)}
                                 className={cn(
-                                    "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap",
+                                    "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all whitespace-nowrap btn-bounce",
                                     isActive
-                                        ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm ring-1 ring-slate-200 dark:ring-slate-700"
-                                        : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                                        ? "bg-primary text-primary-foreground shadow-md"
+                                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
                                 )}
                             >
                                 {Icon && <Icon className="w-4 h-4" />}
@@ -73,11 +73,11 @@ export function ContentViewer({ results, isLoading, onRetry, onSave }: ContentVi
                 </div>
             </CardHeader>
 
-            <CardContent className="flex-1 p-0 bg-slate-50/30 dark:bg-slate-900/30">
+            <CardContent className="flex-1 p-0 bg-muted/10">
                 {/* The Content Area */}
                 <div className="p-6 h-full">
                     {activeResult && (
-                        <div className="animate-in fade-in zoom-in-95 duration-300">
+                        <div className="animate-bounce-in">
                             <GeneratedContentCard
                                 platform={activeResult.platform}
                                 success={activeResult.success}
