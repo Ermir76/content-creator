@@ -1,24 +1,24 @@
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Briefcase, MessageSquare, Camera, Sparkles, ThumbsUp, Music, ChevronDown, ChevronUp, Settings2, Eye, X } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Loader2, Briefcase, MessageSquare, Camera, Sparkles, ThumbsUp, Music, Settings2, Eye, X } from 'lucide-react';
 import { toast } from 'sonner';
 import type { LucideIcon } from 'lucide-react';
 import { PolicyEditor } from './policy/PolicyEditor';
 import type { PolicyOverride, PlatformPolicies } from '@/types/policy';
 import { contentApi, type PlatformPromptPreview } from '@/services/contentApi';
 import { useDebounce } from '@/hooks/useDebounce';
+import { Modal } from '@/components/ui/modal';
 
-interface Platform {
+export interface Platform {
   id: string;
   name: string;
   icon: LucideIcon;
 }
 
-const PLATFORMS: Platform[] = [
+export const PLATFORMS: Platform[] = [
   { id: 'linkedin', name: 'LinkedIn', icon: Briefcase },
   { id: 'x', name: 'X', icon: MessageSquare },
   { id: 'reddit', name: 'Reddit', icon: MessageSquare },
@@ -35,7 +35,7 @@ interface ContentComposerProps {
 export function ContentComposer({ onGenerate, isLoading }: ContentComposerProps) {
   const [ideaPrompt, setIdeaPrompt] = useState('');
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
-  const [expandedPlatforms, setExpandedPlatforms] = useState<string[]>([]);
+  const [editingPlatformId, setEditingPlatformId] = useState<string | null>(null);
   const [platformPolicies, setPlatformPolicies] = useState<PlatformPolicies>({});
   const [showValidation, setShowValidation] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -49,7 +49,7 @@ export function ContentComposer({ onGenerate, isLoading }: ContentComposerProps)
   const debouncedIdea = useDebounce(ideaPrompt, 1000);
   const debouncedPlatforms = useDebounce(selectedPlatforms, 1000);
   const debouncedPolicies = useDebounce(platformPolicies, 1000);
-  const debouncedExpanded = useDebounce(expandedPlatforms, 1000);
+  // const debouncedExpanded = useDebounce(expandedPlatforms, 1000);
 
   // Load preferences on mount
   useEffect(() => {
@@ -65,7 +65,8 @@ export function ContentComposer({ onGenerate, isLoading }: ContentComposerProps)
             setSelectedPlatforms(valid);
           }
           if (prefs.last_policies) setPlatformPolicies(JSON.parse(prefs.last_policies));
-          if (prefs.last_expanded_platforms) setExpandedPlatforms(JSON.parse(prefs.last_expanded_platforms));
+          // expandedPlatforms is removed, we don't persist open modals usually, or we could if we want.
+          // Ignoring last_expanded_platforms for now to simplify.
         }
       } catch (error) {
         console.error('Failed to load preferences:', error);
@@ -85,7 +86,6 @@ export function ContentComposer({ onGenerate, isLoading }: ContentComposerProps)
       idea: debouncedIdea,
       platforms: debouncedPlatforms,
       policies: debouncedPolicies,
-      expanded: debouncedExpanded,
     });
 
     // First run after load: establish baseline, don't save
@@ -106,17 +106,18 @@ export function ContentComposer({ onGenerate, isLoading }: ContentComposerProps)
       last_idea_prompt: debouncedIdea,
       last_platform_selection: JSON.stringify(debouncedPlatforms),
       last_policies: JSON.stringify(debouncedPolicies),
-      last_expanded_platforms: JSON.stringify(debouncedExpanded),
     };
 
     contentApi.updatePreferences(saveData).catch(err => console.error('Failed to save preferences:', err));
-  }, [debouncedIdea, debouncedPlatforms, debouncedPolicies, debouncedExpanded, isLoaded]);
+  }, [debouncedIdea, debouncedPlatforms, debouncedPolicies, isLoaded]);
 
   const handlePlatformToggle = (platformId: string) => {
     setSelectedPlatforms(prev => {
       if (prev.includes(platformId)) {
-        // When unchecking, also collapse the settings
-        setExpandedPlatforms(exp => exp.filter(id => id !== platformId));
+        // When unchecking, also collapse the settings if it's the one open
+        if (editingPlatformId === platformId) {
+          setEditingPlatformId(null);
+        }
         return prev.filter(id => id !== platformId);
       } else {
         return [...prev, platformId];
@@ -125,13 +126,13 @@ export function ContentComposer({ onGenerate, isLoading }: ContentComposerProps)
     setShowValidation(false);
   };
 
-  const handleToggleExpand = (platformId: string, e: React.MouseEvent) => {
+  const handleOpenSettings = (platformId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    setExpandedPlatforms(prev =>
-      prev.includes(platformId)
-        ? prev.filter(id => id !== platformId)
-        : [...prev, platformId]
-    );
+    setEditingPlatformId(platformId);
+  };
+
+  const handleCloseSettings = () => {
+    setEditingPlatformId(null);
   };
 
   const handlePolicyChange = (platformId: string, policy: PolicyOverride) => {
@@ -198,191 +199,170 @@ export function ContentComposer({ onGenerate, isLoading }: ContentComposerProps)
   };
 
   return (
-    <Card className="w-full max-w-3xl mx-auto shadow-2xl">
-      <CardHeader>
-        <CardTitle className="text-2xl">Create Your Content</CardTitle>
-        <CardDescription>
-          Describe your idea and select platforms to generate AI-powered content
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Idea Input */}
-          <div className="space-y-2">
-            <Label htmlFor="idea-prompt" className="text-base font-semibold">
-              What's your idea?
-            </Label>
-            <Textarea
-              id="idea-prompt"
-              placeholder="E.g., Share tips about staying productive while working from home..."
-              value={ideaPrompt}
-              onChange={(e) => {
-                setIdeaPrompt(e.target.value);
-                setShowValidation(false);
-              }}
-              className={`min-h-[120px] resize-none transition-colors ${showValidation && !ideaPrompt.trim()
-                ? 'border-destructive focus-visible:ring-destructive'
-                : ''
-                }`}
-              disabled={isLoading}
-            />
-            {showValidation && !ideaPrompt.trim() && (
-              <p className="text-sm text-destructive">This field is required</p>
-            )}
-          </div>
-
-          {/* Platform Selection with Expandable Settings */}
-          <div className="space-y-3">
-            <Label className="text-base font-semibold">
-              Select Platforms
-            </Label>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
-              Click the settings icon to customize each platform's output
-            </p>
-            <div className={`space-y-3 transition-all ${showValidation && selectedPlatforms.length === 0
-              ? 'ring-2 ring-destructive/50 rounded-lg p-2'
-              : ''
-              }`}>
-              {PLATFORMS.map((platform) => {
-                const Icon = platform.icon;
-                const isSelected = selectedPlatforms.includes(platform.id);
-                const isExpanded = expandedPlatforms.includes(platform.id);
-
-                return (
-                  <div
-                    key={platform.id}
-                    className={`rounded-lg border transition-all ${isSelected
-                      ? 'border-blue-300 dark:border-blue-700 bg-blue-50/50 dark:bg-blue-900/20'
-                      : 'hover:bg-accent'
-                      }`}
-                  >
-                    {/* Platform Header */}
-                    <div className="flex items-center justify-between p-3">
-                      <div className="flex items-center space-x-3">
-                        <Checkbox
-                          id={platform.id}
-                          checked={isSelected}
-                          onCheckedChange={() => handlePlatformToggle(platform.id)}
-                          disabled={isLoading}
-                        />
-                        <Label
-                          htmlFor={platform.id}
-                          className="flex items-center gap-2 cursor-pointer flex-1"
-                        >
-                          <Icon className="w-5 h-5" />
-                          <span className="font-medium">{platform.name}</span>
-                        </Label>
-                      </div>
-
-                      {/* Settings Toggle Button - Only show when selected */}
-                      {isSelected && (
-                        <button
-                          type="button"
-                          onClick={(e) => handleToggleExpand(platform.id, e)}
-                          className="flex items-center gap-1 px-2 py-1 text-sm text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400 transition-colors rounded hover:bg-slate-100 dark:hover:bg-slate-800"
-                          disabled={isLoading}
-                        >
-                          <Settings2 className="w-4 h-4" />
-                          <span className="hidden sm:inline">Customize</span>
-                          {isExpanded ? (
-                            <ChevronUp className="w-4 h-4" />
-                          ) : (
-                            <ChevronDown className="w-4 h-4" />
-                          )}
-                        </button>
-                      )}
-                    </div>
-
-                    {/* Collapsible Policy Controls */}
-                    {isSelected && isExpanded && (
-                      <div className="px-3 pb-3 animate-in slide-in-from-top-2 duration-200">
-                        <PolicyEditor
-                          policy={platformPolicies[platform.id] || {}}
-                          onChange={(policy: PolicyOverride) => handlePolicyChange(platform.id, policy)}
-                          disabled={isLoading}
-                          platform={platform.id}
-                        />
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-            {showValidation && selectedPlatforms.length === 0 && (
-              <p className="text-sm text-destructive">Please select at least one platform</p>
-            )}
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              className="flex-1 text-lg py-6"
-              disabled={isLoading || isLoadingPreview}
-              onClick={handlePreviewPrompt}
-            >
-              {isLoadingPreview ? (
-                <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Loading...
-                </>
-              ) : (
-                <>
-                  <Eye className="mr-2 h-5 w-5" />
-                  Preview Prompt
-                </>
-              )}
-            </Button>
-            <Button
-              type="submit"
-              className="flex-1 text-lg py-6"
-              disabled={isLoading || isLoadingPreview}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="mr-2 h-5 w-5" />
-                  Generate Content
-                </>
-              )}
-            </Button>
-          </div>
-
-          {/* Prompt Preview Section */}
-          {promptPreviews.length > 0 && (
-            <div className="space-y-4 animate-in slide-in-from-top-2 duration-300">
-              <div className="flex items-center justify-between">
-                <Label className="text-base font-semibold">Prompt Preview</Label>
-                <button
-                  type="button"
-                  onClick={() => setPromptPreviews([])}
-                  className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </button>
+    <div className="w-full space-y-8">
+      {/* 1. INPUT CARD */}
+      <Card className="shadow-xl border-slate-200 dark:border-slate-800">
+        <CardContent className="p-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Idea Input */}
+            <div className="space-y-2">
+              <Label htmlFor="idea-prompt" className="text-sm font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 ml-1">
+                What's your idea?
+              </Label>
+              <div className="bg-slate-50 dark:bg-slate-900/50 rounded-xl p-4 min-h-[180px] border border-slate-100 dark:border-slate-800 shadow-inner">
+                <Textarea
+                  id="idea-prompt"
+                  placeholder="E.g., Share tips about staying productive while working from home..."
+                  value={ideaPrompt}
+                  onChange={(e) => {
+                    setIdeaPrompt(e.target.value);
+                    setShowValidation(false);
+                  }}
+                  className={`w-full h-full bg-transparent border-none focus-visible:ring-0 text-lg resize-none p-0 placeholder:text-slate-400 ${showValidation && !ideaPrompt.trim() ? 'placeholder:text-red-400' : ''}`}
+                  disabled={isLoading}
+                />
               </div>
-              {promptPreviews.map((preview) => (
-                <div
-                  key={preview.platform}
-                  className="rounded-lg border bg-slate-50 dark:bg-slate-900 p-4 space-y-2"
-                >
-                  <div className="font-medium text-sm text-blue-600 dark:text-blue-400 uppercase tracking-wide">
-                    {preview.platform}
-                  </div>
-                  <pre className="text-sm whitespace-pre-wrap font-mono text-slate-700 dark:text-slate-300 max-h-64 overflow-y-auto">
-                    {preview.prompt}
-                  </pre>
-                </div>
-              ))}
+              {showValidation && !ideaPrompt.trim() && (
+                <p className="text-sm text-destructive pl-1">This field is required</p>
+              )}
             </div>
+
+
+          </form>
+        </CardContent>
+      </Card>
+
+      {/* 2. ACTION BUTTONS (Separate Row) */}
+      <div className="flex gap-6">
+        <Button
+          type="button"
+          onClick={handlePreviewPrompt}
+          disabled={isLoading || isLoadingPreview}
+          variant="secondary"
+          className="flex-1 py-6 text-base font-bold uppercase tracking-wide bg-orange-100 text-orange-900 hover:bg-orange-200 dark:bg-orange-900/20 dark:text-orange-100 dark:hover:bg-orange-900/40 border border-orange-200 dark:border-orange-800"
+        >
+          {isLoadingPreview ? (
+            <>
+              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+              Wait...
+            </>
+          ) : (
+            <>
+              <Eye className="mr-2 h-5 w-5" />
+              Preview Prompt
+            </>
           )}
-        </form>
-      </CardContent>
-    </Card>
+        </Button>
+        <Button
+          onClick={handleSubmit} // Trigger form submit manually since it's outside form
+          disabled={isLoading || isLoadingPreview}
+          className="flex-1 py-6 text-base font-bold uppercase tracking-wide bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white shadow-lg shadow-blue-900/20"
+        >
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+              Generating...
+            </>
+          ) : (
+            <>
+              <Sparkles className="mr-2 h-5 w-5" />
+              Generate
+            </>
+          )}
+        </Button>
+      </div>
+
+      {/* 2. PLATFORM GRID (Sibling) */}
+      <div className="space-y-3">
+        <Label className="text-sm font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 ml-1">
+          Select Platforms
+        </Label>
+        <div className={`grid grid-cols-2 lg:grid-cols-3 gap-6 transition-all ${showValidation && selectedPlatforms.length === 0 ? 'ring-2 ring-destructive/50 rounded-xl p-2' : ''}`}>
+          {PLATFORMS.map((platform) => {
+            const Icon = platform.icon;
+            const isSelected = selectedPlatforms.includes(platform.id);
+            // const isExpanded = expandedPlatforms.includes(platform.id); // Removed logic
+
+            return (
+              <div
+                key={platform.id}
+                className={`relative cursor-pointer group flex flex-col items-center justify-center gap-3 p-6 rounded-3xl border-2 transition-all duration-300 ${isSelected
+                  ? 'bg-white dark:bg-slate-800 border-blue-500 shadow-xl scale-105 z-10'
+                  : 'bg-white/40 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 hover:scale-105 hover:bg-white dark:hover:bg-slate-800 hover:shadow-lg'
+                  }`}
+                onClick={() => handlePlatformToggle(platform.id)}
+              >
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-md transition-colors ${isSelected
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 group-hover:bg-slate-300 dark:group-hover:bg-slate-700'
+                  }`}>
+                  <Icon className="w-6 h-6" />
+                </div>
+                <span className={`font-extrabold text-lg ${isSelected ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'
+                  }`}>
+                  {platform.name}
+                </span>
+
+                {/* Settings Toggle */
+                  isSelected && (
+                    <button
+                      type="button"
+                      onClick={(e) => handleOpenSettings(platform.id, e)}
+                      className="absolute top-3 right-3 p-2 text-slate-300 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-full transition-all"
+                    >
+                      <Settings2 className="w-5 h-5" />
+                    </button>
+                  )}
+
+                {/* No inline PolicyEditor here anymore */}
+              </div>
+            );
+          })}
+        </div>
+        {showValidation && selectedPlatforms.length === 0 && (
+          <p className="text-sm text-destructive pl-1">Please select at least one platform</p>
+        )}
+      </div>
+
+      {/* Prompt Preview Overlay */}
+      {promptPreviews.length > 0 && (
+        <Card className="animate-in slide-in-from-top-4 border-blue-200 dark:border-blue-900">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-lg text-blue-800 dark:text-blue-300">Prompt Previews</CardTitle>
+            <Button variant="ghost" size="sm" onClick={() => setPromptPreviews([])}>
+              <X className="w-4 h-4" />
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-4 max-h-[400px] overflow-y-auto">
+            {promptPreviews.map((preview) => (
+              <div key={preview.platform} className="p-4 bg-slate-50 dark:bg-slate-950 rounded-lg border border-slate-100 dark:border-slate-800">
+                <div className="font-bold text-blue-600 dark:text-blue-400 text-xs uppercase mb-2 tracking-wider">{preview.platform}</div>
+                <pre className="whitespace-pre-wrap text-sm font-mono text-slate-600 dark:text-slate-400">
+                  {preview.prompt}
+                </pre>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* 4. MODAL FOR SETTINGS */}
+      <Modal
+        isOpen={!!editingPlatformId}
+        onClose={handleCloseSettings}
+        title={editingPlatformId ? `Customize ${PLATFORMS.find(p => p.id === editingPlatformId)?.name} Settings` : ''}
+        description="Adjust how the AI generates content for this platform."
+        className="max-w-3xl"
+      >
+        {editingPlatformId && (
+          <PolicyEditor
+            policy={platformPolicies[editingPlatformId] || {}}
+            onChange={(policy: PolicyOverride) => handlePolicyChange(editingPlatformId, policy)}
+            disabled={isLoading}
+            platform={editingPlatformId}
+          />
+        )}
+      </Modal>
+    </div>
   );
 }

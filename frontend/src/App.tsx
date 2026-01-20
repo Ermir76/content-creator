@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Layout, type ViewType } from './components/Layout';
 import { ContentComposer } from './components/ContentComposer';
-import { GeneratedContentCard } from './components/GeneratedContentCard';
+
 import { HistoryView } from './components/HistoryView';
-import { ArrowUp, Loader2 } from 'lucide-react';
+import { ContentViewer } from './components/ContentViewer';
 import { Toaster, toast } from 'sonner';
 import axios from 'axios';
 import { contentApi } from './services/contentApi';
@@ -125,98 +125,33 @@ function App() {
       <Toaster position="top-right" richColors />
 
       {/* Create View */}
+      {/* 2024-01-20: Added items-stretch to force equal height columns */}
       {currentView === 'create' && (
-        <div className="space-y-8">
-          {/* Content Composer */}
-          <ContentComposer onGenerate={handleGenerate} isLoading={isLoading} />
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch h-full">
+          {/* LEFT: Content Creator Input (8 cols) */}
+          <div className="lg:col-span-8 space-y-8 flex flex-col">
+            <ContentComposer onGenerate={handleGenerate} isLoading={isLoading} />
+          </div>
 
-          {/* Loading State */}
-          {isLoading && (
-            <div className="max-w-3xl mx-auto">
-              <div className="text-center py-12 px-6 bg-gradient-to-br from-slate-200 to-slate-100 dark:from-slate-800/50 dark:to-slate-900/50 rounded-2xl border border-slate-300 dark:border-slate-700">
-                <div className="flex flex-col items-center gap-6">
-                  <Loader2 className="w-16 h-16 text-blue-500 animate-spin" />
-                  <div className="space-y-2">
-                    <h3 className="text-xl font-semibold text-slate-900 dark:text-white">
-                      Generating Your Content...
-                    </h3>
-                    <p className="text-slate-600 dark:text-slate-400">
-                      AI is crafting platform-specific posts for you
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Generated Content Display */}
-          {generatedContent.length > 0 && !isLoading && (
-            <div className="max-w-7xl mx-auto space-y-6">
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Generated Content</h2>
-              <div className="grid gap-4 sm:gap-5 md:grid-cols-2 lg:grid-cols-3">
-                {generatedContent.map((result, index) => (
-                  <div
-                    key={`${result.platform}-${index}`}
-                    className="animate-in fade-in slide-in-from-bottom-4"
-                    style={{ animationDelay: `${index * 100}ms` }}
-                  >
-                    <GeneratedContentCard
-                      platform={result.platform}
-                      success={result.success}
-                      content={result.content}
-                      modelUsed={result.model_used}
-                      error={result.error}
-                      errorCode={result.error_code}
-                      drafts={result.drafts}
-                      onRetry={() => handleRetryPlatform(result.platform)}
-                      onSave={result.success && result.content && lastRequest ? async () => {
-                        await contentApi.saveContent({
-                          idea_prompt: lastRequest.ideaPrompt,
-                          platform: result.platform,
-                          content_text: result.content!,
-                          model_used: result.model_used,
-                          char_count: result.char_count,
-                        });
-                      } : undefined}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Empty State */}
-          {generatedContent.length === 0 && !isLoading && (
-            <div className="max-w-5xl mx-auto">
-              <div className="text-center py-16 px-6 bg-gradient-to-br from-slate-200 to-slate-100 dark:from-slate-800/50 dark:to-slate-900/50 rounded-2xl border border-slate-300 dark:border-slate-700">
-                <div className="flex flex-col items-center gap-6">
-                  <div className="relative">
-                    <ArrowUp className="w-16 h-16 text-slate-400 animate-bounce" />
-                    <div className="absolute -top-2 -right-2 w-4 h-4 bg-blue-500 rounded-full animate-pulse"></div>
-                  </div>
-                  <div className="space-y-3">
-                    <h3 className="text-2xl font-bold text-slate-900 dark:text-white">
-                      Ready to Create Amazing Content?
-                    </h3>
-                    <p className="text-slate-600 dark:text-slate-300 text-lg max-w-md mx-auto">
-                      Enter your content idea above, select your target platforms, and let AI craft engaging posts for you
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap gap-3 justify-center mt-4">
-                    <div className="px-4 py-2 bg-slate-300/50 dark:bg-slate-700/50 rounded-full text-sm text-slate-600 dark:text-slate-300">
-                      ✨ Multi-AI Powered
-                    </div>
-                    <div className="px-4 py-2 bg-slate-300/50 dark:bg-slate-700/50 rounded-full text-sm text-slate-600 dark:text-slate-300">
-                      🎯 Platform-Specific
-                    </div>
-                    <div className="px-4 py-2 bg-slate-300/50 dark:bg-slate-700/50 rounded-full text-sm text-slate-600 dark:text-slate-300">
-                      ⚡ Smart Fallback
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+          {/* RIGHT: Output/Preview/Status (4 cols) */}
+          <div className="lg:col-span-4 self-start h-full flex flex-col">
+            <ContentViewer
+              results={generatedContent}
+              isLoading={isLoading}
+              onRetry={handleRetryPlatform}
+              onSave={async (result) => {
+                if (result.success && result.content && lastRequest) {
+                  await contentApi.saveContent({
+                    idea_prompt: lastRequest.ideaPrompt,
+                    platform: result.platform,
+                    content_text: result.content!,
+                    model_used: result.model_used,
+                    char_count: result.char_count,
+                  });
+                }
+              }}
+            />
+          </div>
         </div>
       )}
 

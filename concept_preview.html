@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>YouMe Muted Terracotta Dashboard</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&amp;family=Material+Icons+Round&amp;display=swap"
+        rel="stylesheet" />
+    <script>tailwind.config = { darkMode: "class", theme: { extend: { colors: { primary: "#d96c57", secondary: "#9e3b5a", accent: "#f9ae55", highlight: "#f9f871", rosewood: "#050330", "taupe-dark": "#050330", "taupe-bg": "#0b0834", "background-light": "#f8fafc", "background-dark": "#050330" }, fontFamily: { display: "Plus Jakarta Sans" }, borderRadius: { DEFAULT: "0.5rem", lg: "1rem", xl: "1.5rem", full: "9999px" } } } };</script>
+    <style type="text/tailwindcss">
+        body {
+            background-image: linear-gradient(to right bottom, #1f1041, #1a0f3e, #140e3b, #0f0b37, #0b0834, #0b0936, #0b0a38, #0b0b3a, #120e42, #1b0f49, #241050, #2e1057);
+            min-height: 100vh;
+            font-family: "Outfit", sans-serif;
+            color: #f2e9e4;
+        }
+        .clay-card {
+            background: rgba(2, 6, 23, 0.7); /* Deep Night Sky Navy (Glass) */
+            border-radius: 32px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5); /* Stronger shadow for dark mode */
+            border: 1px solid rgba(255, 255, 255, 0.05); /* Fainter border */
+            backdrop-filter: blur(12px);
+        }
+        .clay-inset {
+            background: #150b2e; /* Slightly darker purple for contrast */
+            border-radius: 24px;
+            box-shadow: inset 6px 6px 12px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.02);
+        }
+        .clay-btn-terracotta {
+            background: linear-gradient(135deg, #d96c57 0%, #9e3b5a 100%);
+            border-radius: 20px;
+            box-shadow: inset 4px 4px 8px rgba(255, 255, 255, 0.3), inset -4px -4px 8px rgba(0, 0, 0, 0.2), 0 10px 20px rgba(158, 59, 90, 0.4);
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .clay-btn-peach {
+            background: linear-gradient(135deg, #f9ae55 0%, #d96c57 100%);
+            border-radius: 20px;
+            box-shadow: inset 4px 4px 8px rgba(255, 255, 255, 0.4), inset -4px -4px 8px rgba(0, 0, 0, 0.1), 0 10px 20px rgba(217, 108, 87, 0.3);
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            color: #050330;
+        }
+        .clay-btn:active {
+            transform: scale(0.95);
+        }
+        .clay-platform {
+            background: rgba(2, 6, 23, 0.7);
+            border-radius: 24px;
+            box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.3), inset 2px 2px 4px rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .clay-platform:hover {
+            transform: translateY(-4px);
+            background: rgba(158, 59, 90, 0.5); /* #9e3b5a */
+            border-color: rgba(255,255,255,0.2);
+        }
+        .tab-active {
+            background: #d96c57;
+            box-shadow: inset 2px 2px 4px rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+
+<body class="p-6 md:p-10">
+    <div class="max-w-7xl mx-auto space-y-8 relative">
+        <nav class="clay-card h-20 px-8 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg">
+                    <span class="material-icons-round text-white">auto_awesome</span>
+                </div>
+                <h1 class="text-2xl font-extrabold tracking-tight text-white">YouMe <span class="text-primary">AI</span>
+                </h1>
+            </div>
+            <div class="flex items-center gap-6">
+                <a class="font-semibold text-accent/60 hover:text-white transition-colors" href="#">History</a>
+                <a class="font-semibold text-accent/60 hover:text-white transition-colors" href="#">Templates</a>
+                <div class="w-10 h-10 clay-inset flex items-center justify-center">
+                    <span class="material-icons-round text-primary">person</span>
+                </div>
+            </div>
+        </nav>
+        <main class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div class="lg:col-span-7 space-y-8">
+                <div class="clay-card p-6">
+                    <label class="block mb-4 text-sm font-bold uppercase tracking-widest text-primary/60 ml-2">What's on
+                        your mind?</label>
+                    <div class="clay-inset p-4 min-h-[200px]">
+                        <textarea
+                            class="w-full h-full bg-transparent border-none focus:ring-0 text-xl text-white/90 resize-none placeholder-primary/30"
+                            placeholder="Describe your content idea here..."></textarea>
+                    </div>
+                    <div class="flex gap-6 mt-8">
+                        <button
+                            class="clay-btn-peach flex-1 py-4 px-6 flex items-center justify-center gap-2 text-rosewood font-extrabold text-lg clay-btn">
+                            <span class="material-icons-round">visibility</span>
+                            PREVIEW PROMPT
+                        </button>
+                        <button
+                            class="clay-btn-terracotta flex-1 py-4 px-6 flex items-center justify-center gap-2 text-white font-extrabold text-lg clay-btn">
+                            <span class="material-icons-round">bolt</span>
+                            GENERATE
+                        </button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-6">
+                    <div class="clay-platform p-6 flex flex-col items-center justify-center gap-3 cursor-pointer">
+                        <div class="w-12 h-12 bg-[#0077b5] rounded-xl flex items-center justify-center shadow-lg">
+                            <span class="font-bold text-white text-xl">in</span>
+                        </div>
+                        <span class="font-extrabold text-white/80">LinkedIn</span>
+                    </div>
+                    <div class="clay-platform p-6 flex flex-col items-center justify-center gap-3 cursor-pointer">
+                        <div class="w-12 h-12 bg-black/40 rounded-xl flex items-center justify-center shadow-lg">
+                            <span class="font-bold text-white text-2xl">𝕏</span>
+                        </div>
+                        <span class="font-extrabold text-white/80">X / Twitter</span>
+                    </div>
+                    <div
+                        class="clay-platform p-6 flex flex-col items-center justify-center gap-3 cursor-pointer border-2 border-primary/30">
+                        <div
+                            class="w-12 h-12 bg-gradient-to-tr from-[#c16b5a] via-[#8d4f43] to-[#5a3a34] rounded-xl flex items-center justify-center shadow-lg">
+                            <span class="material-icons-round text-white">photo_camera</span>
+                        </div>
+                        <span class="font-extrabold text-white/80">Instagram</span>
+                    </div>
+                    <div class="clay-platform p-6 flex flex-col items-center justify-center gap-3 cursor-pointer">
+                        <div class="w-12 h-12 bg-rose-700 rounded-xl flex items-center justify-center shadow-lg">
+                            <span class="material-icons-round text-white">play_circle_filled</span>
+                        </div>
+                        <span class="font-extrabold text-white/80 text-center">YouTube Shorts</span>
+                    </div>
+                    <div class="clay-platform p-6 flex flex-col items-center justify-center gap-3 cursor-pointer">
+                        <div class="w-12 h-12 bg-zinc-900 rounded-xl flex items-center justify-center shadow-lg">
+                            <span class="material-icons-round text-white">music_note</span>
+                        </div>
+                        <span class="font-extrabold text-white/80">TikTok</span>
+                    </div>
+                    <div class="clay-platform p-6 flex flex-col items-center justify-center gap-3 cursor-pointer">
+                        <div class="w-12 h-12 bg-primary/40 rounded-xl flex items-center justify-center shadow-lg">
+                            <span class="material-icons-round text-white">add</span>
+                        </div>
+                        <span class="font-extrabold text-white/80">Custom</span>
+                    </div>
+                </div>
+            </div>
+            <div class="lg:col-span-5 relative">
+                <div class="clay-card h-full flex flex-col overflow-hidden">
+                    <div class="p-3 bg-black/10 flex gap-2 overflow-x-auto no-scrollbar">
+                        <div
+                            class="px-4 py-2 rounded-xl bg-primary text-white font-bold text-xs whitespace-nowrap cursor-pointer shadow-inner">
+                            𝕏 POST</div>
+                        <div
+                            class="px-4 py-2 rounded-xl bg-rosewood text-accent/50 font-bold text-xs whitespace-nowrap cursor-pointer">
+                            LINKEDIN</div>
+                        <div
+                            class="px-4 py-2 rounded-xl bg-rosewood text-accent/50 font-bold text-xs whitespace-nowrap cursor-pointer">
+                            IG CAPTION</div>
+                        <div
+                            class="px-4 py-2 rounded-xl bg-rosewood text-accent/50 font-bold text-xs whitespace-nowrap cursor-pointer">
+                            HOOKS</div>
+                    </div>
+                    <div class="flex-1 p-8 flex flex-col">
+                        <div class="flex items-center gap-4 mb-6">
+                            <div class="w-12 h-12 clay-inset flex items-center justify-center text-primary">
+                                <span class="material-icons-round text-3xl">smart_toy</span>
+                            </div>
+                            <div>
+                                <h3 class="font-extrabold text-lg text-white">Magic Output</h3>
+                                <p class="text-sm text-primary/50">Ready to go 🚀</p>
+                            </div>
+                        </div>
+                        <div class="clay-inset flex-1 p-6 relative group">
+                            <p class="text-white/80 text-lg leading-relaxed">
+                                Just had an amazing realization about the future of AI! 🤖✨ <br /><br />
+                                It's not about the machines replacing us, it's about how we can leverage these tools to
+                                amplify our own human creativity. <br /><br />
+                                What's one tool that has completely changed your workflow this year? Let's discuss in
+                                the comments! 👇<br /><br />
+                                #AI #TechTrends #Productivity #YouMeAI
+                            </p>
+                            <button
+                                class="absolute bottom-4 right-4 p-3 bg-primary rounded-2xl shadow-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2 font-bold text-white text-sm">
+                                <span class="material-icons-round text-base">content_copy</span>
+                                Copy Content
+                            </button>
+                        </div>
+                        <div class="mt-8 flex gap-4">
+                            <button
+                                class="flex-1 py-3 clay-platform font-bold text-white/80 flex items-center justify-center gap-2">
+                                <span class="material-icons-round">edit</span>
+                                Refine
+                            </button>
+                            <button
+                                class="flex-1 py-3 clay-platform font-bold text-white/80 flex items-center justify-center gap-2">
+                                <span class="material-icons-round">share</span>
+                                Export
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="absolute -top-6 -right-6 w-20 h-20 floating-emoji z-10 pointer-events-none">
+                    <img alt="Fire emoji" class="w-full h-full object-contain"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuB2uKaQH09hQn7AVqBtr1roXOkJeV4I97Wvr64g6tS1Av4DT4M2OR0Ng2fgRcmXOofNKWlukVR497dp0npx82IpWfLzdkl1LW1AXQOJlmX_9o0n8rzoZrZrCh7aCTkQCKLxze6y1pkV0VncGdqPqDb0yXri14wOQ_JJpGRUpawH1SY4pnE7htXvfLQcTURSHHZHRZUblvuzhWTIZZYpA-wiscn1oRyN6s0RmFHhkXFWWecKhQhBp7D3n-EdI-Oqa-52U0kcGrVqMNs" />
+                </div>
+                <div class="absolute -bottom-4 -left-8 w-24 h-24 floating-emoji z-10 pointer-events-none"
+                    style="animation-delay: -1s;">
+                    <img alt="Robot mascot" class="w-full h-full object-contain filter drop-shadow-2xl"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuDp890hLlmanWYbndbsgdLmmbyb5SpIBXQ__yVfwoboSRtCTr7JRXepDOe3rqN2CamrXge-JHiVdQs0lN_pB1ELEfKVp6gu_pkJRwO7tQSyoDOmY2PXHUR-q_mLBGv--lcJIMYPg5s88hhKW4-ZJFn4Cfsm9BExf4W_rgv7PU_47-pkWX0f6tKgWVeN--AqA1wlJbwFEIVpltC8wl634iwls2tWkqbNosEfifk7m_rFaYmZXyz6LGgdygCmYkvF84mW4ro3kmMhXCs" />
+                </div>
+            </div>
+        </main>
+        <footer class="flex justify-center pt-4">
+            <div class="clay-card py-3 px-8 flex items-center gap-8 bg-rosewood/40">
+                <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                    <span class="text-xs font-bold text-accent/40 uppercase tracking-widest">AI Online</span>
+                </div>
+                <div class="h-4 w-px bg-white/5"></div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-bold text-accent/40 uppercase tracking-widest">Credits: 42/100</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+</body>
+
+</html>

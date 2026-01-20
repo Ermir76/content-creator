@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Copy, Check, Eye, Save, CheckCircle, Cpu } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Copy, Check, Save, CheckCircle, Cpu } from 'lucide-react';
 import { toast } from 'sonner';
-import { ContentModal } from '../ContentModal';
 import { DraftTabs } from './DraftTabs';
 import { PLATFORM_COLORS, PLATFORM_LABELS, MODEL_LABELS, MODEL_COLORS } from './constants';
 import type { Draft } from '../../types/content';
@@ -27,7 +26,6 @@ export function SuccessCard({
     const [copied, setCopied] = useState(false);
     const [saved, setSaved] = useState(false);
     const [saving, setSaving] = useState(false);
-    const [modalOpen, setModalOpen] = useState(false);
 
     // State for selected draft (defaults to last one)
     const [selectedDraftIndex, setSelectedDraftIndex] = useState<number>(
@@ -76,9 +74,7 @@ export function SuccessCard({
     const modelLabel = displayModel ? (MODEL_LABELS[displayModel.toLowerCase()] || displayModel) : null;
     const modelColor = displayModel ? (MODEL_COLORS[displayModel.toLowerCase()] || 'bg-slate-100 text-slate-700') : '';
 
-    const previewText = displayContent && displayContent.length > 200
-        ? displayContent.substring(0, 200) + '...'
-        : displayContent;
+
 
     return (
         <>
@@ -112,11 +108,10 @@ export function SuccessCard({
                     />
 
                     <div
-                        onClick={() => setModalOpen(true)}
-                        className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700/50 cursor-pointer hover:border-blue-300 dark:hover:border-blue-600 transition-colors"
+                        className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-lg border border-slate-100 dark:border-slate-700/50 max-h-[500px] overflow-y-auto custom-scrollbar"
                     >
-                        <p className="text-sm whitespace-pre-wrap leading-relaxed text-slate-700 dark:text-slate-200 line-clamp-4">
-                            {previewText}
+                        <p className="text-sm whitespace-pre-wrap leading-relaxed text-slate-700 dark:text-slate-200">
+                            {displayContent}
                         </p>
                     </div>
 
@@ -127,15 +122,7 @@ export function SuccessCard({
                     )}
 
                     <div className="flex gap-2">
-                        <Button
-                            onClick={() => setModalOpen(true)}
-                            variant="outline"
-                            size="sm"
-                            className="flex-1 border-purple-300 dark:border-purple-600 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20"
-                        >
-                            <Eye className="mr-1 h-4 w-4" />
-                            View
-                        </Button>
+
                         <Button
                             onClick={handleCopy}
                             variant="outline"
@@ -163,14 +150,7 @@ export function SuccessCard({
                 </CardContent>
             </Card>
 
-            <ContentModal
-                isOpen={modalOpen}
-                onClose={() => setModalOpen(false)}
-                platform={platform}
-                content={displayContent || ''}
-                modelUsed={displayModel}
-                canEdit={false}
-            />
+
         </>
     );
 }
