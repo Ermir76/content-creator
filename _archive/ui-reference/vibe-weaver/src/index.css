@@ -1,0 +1,589 @@
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Alchemy Lab - Ancient Sepia Light Theme */
+    --background: 35 35% 92%;
+    --foreground: 30 25% 15%;
+
+    --card: 35 40% 88%;
+    --card-foreground: 30 25% 15%;
+
+    --popover: 35 38% 90%;
+    --popover-foreground: 30 25% 15%;
+
+    /* Primary - Deep Amber/Gold (darker for light mode contrast) */
+    --primary: 35 80% 40%;
+    --primary-foreground: 35 35% 95%;
+    --primary-glow: 38 90% 50%;
+
+    /* Secondary - Warm Sepia Brown */
+    --secondary: 30 50% 45%;
+    --secondary-foreground: 30 30% 95%;
+
+    /* Muted - Soft Parchment (AAA contrast: 7:1+) */
+    --muted: 35 25% 80%;
+    --muted-foreground: 30 30% 25%;
+
+    /* Accent - Antique Green */
+    --accent: 140 40% 35%;
+    --accent-foreground: 140 30% 95%;
+
+    --destructive: 0 65% 45%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 30 30% 60%;
+    --input: 35 30% 85%;
+    --ring: 35 90% 35%;
+
+    --radius: 1rem;
+
+    /* Alchemy Glow Effects (softer for light mode) */
+    --glow-gold: 0 0 20px hsl(35 80% 40% / 0.2), 0 0 40px hsl(35 80% 40% / 0.1);
+    --glow-teal: 0 0 20px hsl(180 40% 35% / 0.2), 0 0 40px hsl(180 40% 35% / 0.1);
+    --glow-green: 0 0 20px hsl(140 40% 35% / 0.2), 0 0 40px hsl(140 40% 35% / 0.1);
+
+    /* Platform Potion Colors */
+    --instagram: 340 70% 45%;
+    --tiktok: 180 80% 30%;
+    --twitter: 200 85% 40%;
+    --linkedin: 210 80% 40%;
+    --facebook: 220 60% 45%;
+    --reddit: 16 90% 45%;
+
+    /* Shadows (warmer for sepia) */
+    --shadow-soft: 0 4px 20px -4px hsl(30 30% 20% / 0.15);
+    --shadow-card: 0 8px 32px -8px hsl(30 30% 20% / 0.2), 0 0 0 1px hsl(30 20% 75% / 0.5);
+    --shadow-button: 0 8px 24px -8px hsl(35 80% 40% / 0.3);
+    --shadow-glow: var(--glow-gold);
+    --shadow-inset: inset 0 2px 20px hsl(30 20% 60% / 0.15);
+
+    /* Sidebar tokens */
+    --sidebar-background: 35 40% 88%;
+    --sidebar-foreground: 30 25% 15%;
+    --sidebar-primary: 35 80% 40%;
+    --sidebar-primary-foreground: 35 35% 95%;
+    --sidebar-accent: 30 50% 45%;
+    --sidebar-accent-foreground: 30 30% 95%;
+    --sidebar-border: 30 20% 75%;
+    --sidebar-ring: 35 80% 40%;
+  }
+
+  .dark {
+    /* Alchemy Lab - Midnight Forest Dark Theme */
+    --background: 200 30% 6%;
+    --foreground: 45 30% 92%;
+
+    --card: 200 25% 10%;
+    --card-foreground: 45 30% 92%;
+
+    --popover: 200 28% 8%;
+    --popover-foreground: 45 30% 92%;
+
+    /* Primary - Glowing Amber/Gold */
+    --primary: 42 90% 55%;
+    --primary-foreground: 200 30% 6%;
+    --primary-glow: 38 100% 65%;
+
+    /* Secondary - Mystic Teal */
+    --secondary: 180 50% 35%;
+    --secondary-foreground: 180 30% 95%;
+
+    /* Muted - Deep Forest (AAA contrast: 7:1+) */
+    --muted: 200 20% 15%;
+    --muted-foreground: 200 15% 72%;
+
+    /* Accent - Potion Green */
+    --accent: 150 70% 45%;
+    --accent-foreground: 150 80% 10%;
+
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 200 25% 28%;
+    --input: 200 20% 12%;
+    --ring: 42 95% 60%;
+
+    /* Alchemy Glow Effects */
+    --glow-gold: 0 0 30px hsl(42 90% 55% / 0.4), 0 0 60px hsl(42 90% 55% / 0.2);
+    --glow-teal: 0 0 30px hsl(180 60% 45% / 0.4), 0 0 60px hsl(180 60% 45% / 0.2);
+    --glow-green: 0 0 30px hsl(150 70% 50% / 0.4), 0 0 60px hsl(150 70% 50% / 0.2);
+
+    /* Platform Potion Colors */
+    --instagram: 340 75% 50%;
+    --tiktok: 180 90% 40%;
+    --twitter: 200 90% 50%;
+    --linkedin: 210 85% 45%;
+    --facebook: 220 65% 50%;
+    --reddit: 16 100% 50%;
+
+    /* Shadows */
+    --shadow-soft: 0 4px 20px -4px hsl(200 30% 0% / 0.5);
+    --shadow-card: 0 8px 32px -8px hsl(200 30% 0% / 0.6), 0 0 0 1px hsl(200 20% 18% / 0.5);
+    --shadow-button: 0 8px 24px -8px hsl(42 90% 55% / 0.5);
+    --shadow-glow: var(--glow-gold);
+    --shadow-inset: inset 0 2px 20px hsl(200 30% 5% / 0.5);
+
+    /* Sidebar tokens */
+    --sidebar-background: 200 25% 10%;
+    --sidebar-foreground: 45 30% 92%;
+    --sidebar-primary: 42 90% 55%;
+    --sidebar-primary-foreground: 200 30% 6%;
+    --sidebar-accent: 180 50% 35%;
+    --sidebar-accent-foreground: 180 30% 95%;
+    --sidebar-border: 200 20% 18%;
+    --sidebar-ring: 42 90% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Crimson Pro', serif;
+  }
+}
+
+@layer components {
+  /* Alchemy Gradients */
+  .gradient-text {
+    background: linear-gradient(135deg, hsl(42 90% 55%), hsl(38 100% 70%), hsl(42 90% 55%));
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: shimmer 3s linear infinite;
+  }
+
+  .gradient-bg {
+    background: 
+      radial-gradient(ellipse at 20% 0%, hsl(35 50% 85% / 0.6) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 100%, hsl(30 45% 75% / 0.4) 0%, transparent 50%),
+      linear-gradient(180deg, hsl(35 35% 92%), hsl(35 30% 88%));
+  }
+
+  .dark .gradient-bg {
+    background: 
+      radial-gradient(ellipse at 20% 0%, hsl(180 50% 20% / 0.4) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 100%, hsl(42 90% 30% / 0.2) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, hsl(200 30% 8%) 0%, hsl(200 30% 4%) 100%);
+  }
+
+  .card-gradient {
+    background: linear-gradient(180deg, hsl(35 40% 90%), hsl(35 35% 85%));
+  }
+
+  .dark .card-gradient {
+    background: linear-gradient(180deg, hsl(200 25% 12%), hsl(200 25% 8%));
+  }
+
+  /* Cauldron Styles - Light Mode */
+  .cauldron-container {
+    background: linear-gradient(180deg, hsl(35 40% 90%), hsl(35 35% 85%));
+    border: 2px solid hsl(30 25% 70%);
+    box-shadow: var(--shadow-inset), var(--shadow-card);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .dark .cauldron-container {
+    background: linear-gradient(180deg, hsl(200 25% 10%), hsl(200 30% 6%));
+    border: 2px solid hsl(200 20% 18%);
+  }
+
+  .cauldron-container::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: 
+      radial-gradient(ellipse at 50% 100%, hsl(35 80% 40% / 0.08) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .dark .cauldron-container::before {
+    background: 
+      radial-gradient(ellipse at 50% 100%, hsl(42 90% 55% / 0.05) 0%, transparent 60%);
+  }
+
+  .cauldron-container:focus-within {
+    border-color: hsl(35 80% 40% / 0.6);
+    box-shadow: var(--shadow-inset), var(--glow-gold);
+  }
+
+  .dark .cauldron-container:focus-within {
+    border-color: hsl(42 90% 55% / 0.5);
+  }
+
+  /* Bottle Styles */
+  .potion-bottle {
+    @apply relative transition-all duration-300 cursor-pointer;
+  }
+
+  .potion-bottle:hover {
+    transform: translateY(-4px) rotate(-2deg);
+  }
+
+  .potion-bottle-selected {
+    filter: drop-shadow(0 0 20px hsl(var(--primary) / 0.5));
+  }
+
+  /* Essence Jar Styles - Light Mode */
+  .essence-jar {
+    @apply relative p-4 rounded-2xl cursor-pointer transition-all duration-300;
+    background: linear-gradient(180deg, hsl(35 35% 90%), hsl(35 30% 85%));
+    border: 2px solid hsl(30 20% 75%);
+  }
+
+  .dark .essence-jar {
+    background: linear-gradient(180deg, hsl(200 20% 14%), hsl(200 20% 10%));
+    border: 2px solid hsl(200 20% 20%);
+  }
+
+  .essence-jar:hover {
+    transform: translateY(-2px) rotate(1deg);
+    border-color: hsl(30 25% 65%);
+  }
+
+  .dark .essence-jar:hover {
+    border-color: hsl(200 20% 25%);
+  }
+
+  .essence-jar-selected {
+    border-color: hsl(35 80% 40%);
+    box-shadow: var(--glow-gold);
+  }
+
+  .dark .essence-jar-selected {
+    border-color: hsl(42 90% 55%);
+  }
+
+  /* Brew Button - Light Mode */
+  .brew-button {
+    @apply relative px-10 py-5 rounded-2xl font-bold text-lg transition-all duration-300;
+    background: linear-gradient(135deg, hsl(35 75% 45%), hsl(32 70% 50%), hsl(35 75% 48%));
+    color: hsl(35 35% 95%);
+    box-shadow: 
+      0 8px 32px -8px hsl(35 80% 40% / 0.4),
+      inset 0 1px 0 hsl(40 90% 65% / 0.3);
+    text-shadow: 0 1px 2px hsl(30 50% 20% / 0.2);
+  }
+
+  .dark .brew-button {
+    background: linear-gradient(135deg, hsl(42 90% 45%), hsl(38 85% 55%), hsl(42 90% 50%));
+    color: hsl(200 30% 6%);
+    box-shadow: 
+      0 8px 32px -8px hsl(42 90% 55% / 0.6),
+      inset 0 1px 0 hsl(45 100% 70% / 0.3);
+    text-shadow: 0 1px 0 hsl(45 100% 80% / 0.3);
+  }
+
+  .brew-button:hover:not(:disabled) {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 
+      0 12px 40px -8px hsl(35 80% 40% / 0.5),
+      inset 0 1px 0 hsl(40 90% 65% / 0.4),
+      var(--glow-gold);
+  }
+
+  .dark .brew-button:hover:not(:disabled) {
+    box-shadow: 
+      0 12px 40px -8px hsl(42 90% 55% / 0.7),
+      inset 0 1px 0 hsl(45 100% 70% / 0.4),
+      var(--glow-gold);
+  }
+
+  .brew-button:active:not(:disabled) {
+    transform: translateY(0) scale(0.98);
+  }
+
+  .brew-button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+
+  /* Output Potion - Light Mode */
+  .output-potion {
+    @apply p-5 rounded-2xl transition-all duration-300;
+    background: linear-gradient(180deg, hsl(35 38% 90%), hsl(35 32% 86%));
+    border: 2px solid hsl(30 22% 75%);
+  }
+
+  .dark .output-potion {
+    background: linear-gradient(180deg, hsl(200 20% 12%), hsl(200 20% 8%));
+    border: 2px solid hsl(200 20% 18%);
+  }
+
+  .output-potion:hover {
+    border-color: hsl(30 25% 65%);
+  }
+
+  .dark .output-potion:hover {
+    border-color: hsl(200 20% 25%);
+  }
+
+  /* Floating Decorations - Light Mode */
+  .floating-sparkle {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: hsl(35 80% 50%);
+    box-shadow: 0 0 8px hsl(35 80% 40%);
+    animation: float-sparkle 4s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  .dark .floating-sparkle {
+    background: hsl(42 90% 70%);
+    box-shadow: 0 0 10px hsl(42 90% 55%);
+  }
+
+  /* Mystical Border */
+  .mystical-border {
+    position: relative;
+  }
+
+  .mystical-border::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    padding: 2px;
+    background: linear-gradient(135deg, hsl(42 90% 55% / 0.3), hsl(280 60% 45% / 0.3), hsl(42 90% 55% / 0.3));
+    -webkit-mask: 
+      linear-gradient(#fff 0 0) content-box, 
+      linear-gradient(#fff 0 0);
+    mask: 
+      linear-gradient(#fff 0 0) content-box, 
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  /* Recipe card modal - Light Mode */
+  .recipe-card {
+    background: 
+      linear-gradient(180deg, hsl(35 38% 88%), hsl(35 32% 82%));
+    border: 2px solid hsl(30 25% 70%);
+    position: relative;
+  }
+
+  .dark .recipe-card {
+    background: 
+      linear-gradient(180deg, hsl(35 30% 15%), hsl(30 25% 10%));
+    border: 2px solid hsl(35 25% 25%);
+  }
+
+  .recipe-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    border-radius: inherit;
+  }
+
+  /* Tab styling for recipe modal - Light Mode */
+  .recipe-tab {
+    @apply px-4 py-2 text-sm font-medium transition-all duration-200 rounded-lg;
+    color: hsl(30 20% 45%);
+  }
+
+  .dark .recipe-tab {
+    color: hsl(200 15% 55%);
+  }
+
+  .recipe-tab[data-state="active"] {
+    background: hsl(35 80% 40%);
+    color: hsl(35 35% 95%);
+  }
+
+  .dark .recipe-tab[data-state="active"] {
+    background: hsl(42 90% 55%);
+    color: hsl(200 30% 6%);
+  }
+
+  /* Slider track for alchemy - Light Mode */
+  .alchemy-slider-track {
+    @apply h-2 rounded-full;
+    background: linear-gradient(90deg, hsl(30 20% 75%), hsl(30 22% 72%));
+  }
+
+  .dark .alchemy-slider-track {
+    background: linear-gradient(90deg, hsl(200 20% 18%), hsl(200 20% 22%));
+  }
+
+  .alchemy-slider-range {
+    background: linear-gradient(90deg, hsl(140 40% 40%), hsl(35 80% 45%));
+  }
+
+  .dark .alchemy-slider-range {
+    background: linear-gradient(90deg, hsl(180 50% 45%), hsl(42 90% 55%));
+  }
+
+  .alchemy-slider-thumb {
+    @apply w-5 h-5 rounded-full cursor-grab;
+    background: linear-gradient(135deg, hsl(35 80% 50%), hsl(35 75% 42%));
+    box-shadow: 0 0 12px hsl(35 80% 40% / 0.4);
+    border: 2px solid hsl(35 85% 55%);
+  }
+
+  .dark .alchemy-slider-thumb {
+    background: linear-gradient(135deg, hsl(42 90% 60%), hsl(42 90% 50%));
+    box-shadow: 0 0 15px hsl(42 90% 55% / 0.5);
+    border: 2px solid hsl(42 90% 70%);
+  }
+
+  /* Ingredient Tag Parchment */
+  .ingredient-tag-parchment {
+    background: linear-gradient(
+      165deg,
+      hsl(35 40% 88%) 0%,
+      hsl(35 35% 82%) 30%,
+      hsl(30 30% 78%) 60%,
+      hsl(35 35% 80%) 100%
+    );
+    border: 1px solid hsl(30 20% 65%);
+    box-shadow: 
+      0 4px 12px -2px hsl(30 20% 20% / 0.2),
+      inset 0 1px 0 hsl(45 40% 95% / 0.5);
+  }
+
+  .ingredient-tag-parchment:hover {
+    background: linear-gradient(
+      165deg,
+      hsl(38 45% 90%) 0%,
+      hsl(38 40% 85%) 30%,
+      hsl(33 35% 80%) 60%,
+      hsl(38 40% 82%) 100%
+    );
+  }
+
+  .ingredient-tag-selected {
+    background: linear-gradient(
+      165deg,
+      hsl(42 50% 90%) 0%,
+      hsl(40 45% 85%) 30%,
+      hsl(38 40% 80%) 60%,
+      hsl(42 45% 82%) 100%
+    );
+    border-color: hsl(35 50% 55%);
+    box-shadow: 
+      0 6px 20px -4px hsl(35 60% 40% / 0.3),
+      inset 0 1px 0 hsl(45 50% 95% / 0.6);
+  }
+}
+
+/* Keyframe Animations */
+@keyframes shimmer {
+  0% { background-position: 0% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes bubble {
+  0%, 100% { 
+    transform: translateY(0) scale(1);
+    opacity: 0.6;
+  }
+  50% { 
+    transform: translateY(-10px) scale(1.1);
+    opacity: 1;
+  }
+}
+
+@keyframes float-sparkle {
+  0%, 100% {
+    transform: translateY(0) translateX(0) scale(1);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-30px) translateX(10px) scale(0.8);
+    opacity: 0.8;
+  }
+  90% {
+    opacity: 1;
+  }
+}
+
+@keyframes pour {
+  0% { 
+    clip-path: inset(100% 0 0 0);
+  }
+  100% { 
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes smoke-rise {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 0.3;
+  }
+  100% {
+    transform: translateY(-50px) scale(1.5);
+    opacity: 0;
+  }
+}
+
+@keyframes cauldron-bubble {
+  0%, 100% {
+    transform: scale(1) translateY(0);
+  }
+  50% {
+    transform: scale(1.2) translateY(-5px);
+  }
+}
+
+@keyframes glow-pulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 10px hsl(42 90% 55% / 0.4));
+  }
+  50% {
+    filter: drop-shadow(0 0 20px hsl(42 90% 55% / 0.7));
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .animate-bubble {
+    animation: bubble 2s ease-in-out infinite;
+  }
+
+  .animate-pour {
+    animation: pour 0.6s ease-out forwards;
+  }
+
+  .animate-smoke {
+    animation: smoke-rise 2s ease-out infinite;
+  }
+
+  .animate-cauldron-bubble {
+    animation: cauldron-bubble 1.5s ease-in-out infinite;
+  }
+
+  .animate-glow-pulse {
+    animation: glow-pulse 2s ease-in-out infinite;
+  }
+
+  .animate-shimmer {
+    animation: shimmer 3s linear infinite;
+  }
+}

@@ -239,3 +239,7 @@ documents/
 
 # Extra docs (only README.md should be tracked)
 CODE_REVIEW.md
+
+# Archive folder
+
+*node_modules/

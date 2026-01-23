@@ -1,12 +1,27 @@
 from typing import List, Dict, Optional, Any, Union
 from datetime import datetime
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
+
+
+def to_camel(string: str) -> str:
+    """Convert snake_case to camelCase."""
+    components = string.split("_")
+    return components[0] + "".join(x.title() for x in components[1:])
+
+
+class CamelModel(BaseModel):
+    """Base model that accepts both camelCase and snake_case."""
+
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        populate_by_name=True,  # Accept both camelCase and snake_case
+    )
 
 
 # --- Deep Configuration Models (Matching config.yaml) ---
 
 
-class PersonalityConfig(BaseModel):
+class PersonalityConfig(CamelModel):
     human: Optional[float] = None
     professional: Optional[float] = None
     friendly: Optional[float] = None
@@ -15,26 +30,26 @@ class PersonalityConfig(BaseModel):
     opinionated: Optional[float] = None
 
 
-class AuthenticityConfig(BaseModel):
+class AuthenticityConfig(CamelModel):
     honest: Optional[float] = None
     polished: Optional[float] = None
     raw: Optional[float] = None
 
 
-class AuthorPersona(BaseModel):
+class AuthorPersona(CamelModel):
     perspective: Optional[str] = None  # first-person, etc.
     personality: Optional[PersonalityConfig] = None
     authenticity: Optional[AuthenticityConfig] = None
     corporate: Optional[bool] = None
 
 
-class StyleWeights(BaseModel):
+class StyleWeights(CamelModel):
     direct: Optional[float] = None
     indirect: Optional[float] = None
     casual: Optional[float] = None
 
 
-class MoodWeights(BaseModel):
+class MoodWeights(CamelModel):
     reflective: Optional[float] = None
     energetic: Optional[float] = None
     serious: Optional[float] = None
@@ -45,13 +60,13 @@ class MoodWeights(BaseModel):
     curious: Optional[float] = None
 
 
-class ApproachWeights(BaseModel):
+class ApproachWeights(CamelModel):
     direct: Optional[float] = None
     storytelling: Optional[float] = None
     educational: Optional[float] = None
 
 
-class HumorConfig(BaseModel):
+class HumorConfig(CamelModel):
     enabled: Optional[bool] = None
     intensity: Optional[float] = None
     types: Optional[Dict[str, float]] = (
@@ -59,7 +74,7 @@ class HumorConfig(BaseModel):
     )
 
 
-class WritingStyle(BaseModel):
+class WritingStyle(CamelModel):
     style: Optional[StyleWeights] = None
     mood: Optional[MoodWeights] = None
     approach: Optional[ApproachWeights] = None
@@ -68,7 +83,7 @@ class WritingStyle(BaseModel):
     emojis: Optional[str] = None
 
 
-class HookWeights(BaseModel):
+class HookWeights(CamelModel):
     punchy: Optional[float] = None
     question: Optional[float] = None
     statistic: Optional[float] = None
@@ -79,7 +94,7 @@ class HookWeights(BaseModel):
     pain_point: Optional[float] = None
 
 
-class BodyTexture(BaseModel):
+class BodyTexture(CamelModel):
     examples: Optional[float] = None
     data: Optional[float] = None
     analogy: Optional[float] = None
@@ -87,12 +102,12 @@ class BodyTexture(BaseModel):
     tension: Optional[float] = None
 
 
-class BodyConfig(BaseModel):
+class BodyConfig(CamelModel):
     type: Optional[str] = None
     texture: Optional[BodyTexture] = None
 
 
-class EndingWeights(BaseModel):
+class EndingWeights(CamelModel):
     one_question: Optional[float] = None
     call_to_action: Optional[float] = None
     statement: Optional[float] = None
@@ -101,19 +116,19 @@ class EndingWeights(BaseModel):
     challenge: Optional[float] = None
 
 
-class FormatConfig(BaseModel):
+class FormatConfig(CamelModel):
     hook: Optional[HookWeights] = None
     body: Optional[BodyConfig] = None
     ending: Optional[EndingWeights] = None
 
 
-class Constraints(BaseModel):
+class Constraints(CamelModel):
     char_limit: Optional[int] = None
     target_chars: Optional[int] = None
     hashtags: Optional[int] = None
 
 
-class ModelRouting(BaseModel):
+class ModelRouting(CamelModel):
     default: Optional[str] = None
     pipeline: Optional[Dict[str, str]] = None  # generator: gemini, etc.
 
@@ -121,7 +136,7 @@ class ModelRouting(BaseModel):
 # --- The Master Override Object ---
 
 
-class PolicyOverride(BaseModel):
+class PolicyOverride(CamelModel):
     """
     Full control over every aspect of generation.
     Matches the structure of defaults/platforms in config.yaml.
@@ -190,6 +205,7 @@ class ContentUpdateRequest(BaseModel):
 
 class PromptPreviewRequest(BaseModel):
     """Request model for previewing prompts before generation."""
+
     idea_prompt: str
     platforms: List[str]
     platform_policies: Optional[Dict[str, PolicyOverride]] = None
@@ -197,12 +213,14 @@ class PromptPreviewRequest(BaseModel):
 
 class PlatformPromptPreview(BaseModel):
     """Preview of a single platform's prompt."""
+
     platform: str
     prompt: str
 
 
 class PromptPreviewResponse(BaseModel):
     """Response containing prompt previews for all requested platforms."""
+
     previews: List[PlatformPromptPreview]
 
 
