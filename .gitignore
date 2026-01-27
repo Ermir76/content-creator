@@ -218,6 +218,7 @@ drafts/
 temp/
 cache/
 documents/
+SECURITY_AUDIT_REPORT.md
 
 # AI/ML models (if any)
 *.pkl
@@ -243,3 +244,4 @@ CODE_REVIEW.md
 # Archive folder
 
 *node_modules/
+task.md
